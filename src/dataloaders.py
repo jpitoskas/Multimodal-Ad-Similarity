@@ -59,6 +59,8 @@ class AdTitleDataset(Dataset):
         
         if self.shuffle:
             random.shuffle(self.ids)
+        else:
+            self.ids = sorted(self.ids)
             
             
 
@@ -133,13 +135,10 @@ class AdTitleDataset(Dataset):
                 * 'turl' (string): ad thumbnail url
                 * 'label' (int): class id
         """
-        
+
         item_id = self.ids[idx]
         return self.data[item_id]
-        
-        
-
-
+    
 
 
 
@@ -173,13 +172,16 @@ class AdThumbnailDataset(Dataset):
         self.data = {}
         for filename in all_filenames:
             label, item_id, _ = filename.split('_')
-            self.data[item_id] = {'cc': int(item_id), 'label': int(label), 'filename': filename}
+            label, item_id = int(label), int(item_id)
+            self.data[item_id] = {'cc': item_id, 'label': label, 'filename': filename}
             
         
         self.ids = list(self.data.keys())
         
         if self.shuffle:
             random.shuffle(self.ids)
+        else:
+            self.ids = sorted(self.ids)
         
 
         
@@ -194,8 +196,8 @@ class AdThumbnailDataset(Dataset):
             (tuple):
                 * img (PIL Image or Tensor): transformed image
                 * label (int): class id
+        
         """
-
         item_id = self.ids[idx]
         item = self.data[item_id]
         
@@ -206,7 +208,6 @@ class AdThumbnailDataset(Dataset):
         label = item['label']    
     
         if self.transforms:
-            # TODO
             raise NotImplementedError
         
         return img, label
@@ -220,13 +221,7 @@ class AdThumbnailDataset(Dataset):
         Returns:
             (int): the length of the image dataset
         """
-        
         return len(self.ids)
-    
-    
-    
-
-
 
 
 
