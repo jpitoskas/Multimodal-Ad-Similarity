@@ -147,7 +147,7 @@ class AdTitleDataset(Dataset):
 
 class AdThumbnailDataset(Dataset):
     """
-    Class to handle the Ad Thumbnail Dataset.
+    Custom PyTorch dataset to handle ad thumbnails (images).
     """
     
     def __init__(self, imgs_dir, transforms=None, shuffle=True):
@@ -226,3 +226,77 @@ class AdThumbnailDataset(Dataset):
 
 
 
+class CombinedAdDataset(Dataset):
+    """
+    Custom PyTorch dataset combining AdTitleDataset and AdThumbnailDataset into one.
+    """
+    
+
+    def __init__(self, 
+                 ad_title_dataset: AdTitleDataset,
+                 ad_thumbnail_dataset: AdThumbnailDataset,
+                 shuffle=True):
+        """
+        Initialize the CombinedAdDataset
+        
+        Args:
+            ad_title_dataset (AdTitleDataset): Dataset containing ad title information.
+            ad_thumbnail_dataset (AdThumbnailDataset): Dataset containing ad thumbnail images.
+            shuffle (bool, optional): Whether to shuffle the dataset. Default is True.
+        """
+        
+        
+        if not isinstance(ad_title_dataset, AdTitleDataset):
+            raise TypeError("ad_title_dataset should be an instance of AdTitleDataset")
+        
+        if not isinstance(ad_thumbnail_dataset, AdThumbnailDataset):
+            raise TypeError("ad_thumbnail_dataset should be an instance of AdThumbnailDataset")
+        
+        
+        self.ad_title_dataset = ad_title_dataset
+        self.ad_thumbnail_dataset = ad_thumbnail_dataset
+        
+        assert len(ad_title_dataset) == len(ad_thumbnail_dataset), "Datasets must have the same length"
+        assert set(ad_title_dataset.ids) == set(ad_thumbnail_dataset.ids), "Datasets must correspond to the same items ids"
+        assert ad_title_dataset.ids == ad_thumbnail_dataset.ids, "Dataset ids not in the same order. When initializing the two Datasets, set shuffle=False."
+        
+        
+        self.ids = ad_title_dataset.ids.copy()
+        
+        
+        
+    def __getitem__(self, idx):
+        """
+        Get the combined data for a given index.
+        
+        Args:
+            idx (int): Index of the item in the dataset
+            
+        Returns:
+            (tuple):
+                * text (string): raw text input
+                * img (PIL Image or Tensor): transformed image
+                * label (int): class id    
+        """
+        
+        text, label_text = self.ad_title_dataset[idx]
+        img, label_img = self.ad_thumbnail_dataset[idx]
+        
+        assert label_text == label_img, f'Label mismatch between the two datasets on the item with id: {self.ids[idx]}' 
+        
+        label = label_text # Assigning one of the labels, knowing they are equal
+        
+        return (text, img), label
+        
+                
+        
+    def __len__(self):
+        """
+        Returns the length of the ad dataset.
+        
+        Returns:
+            (int): the length of the ad dataset
+        """
+        raise len(self.ids)
+
+    
