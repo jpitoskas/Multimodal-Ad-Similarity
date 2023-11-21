@@ -297,6 +297,6 @@ class CombinedAdDataset(Dataset):
         Returns:
             (int): the length of the ad dataset
         """
-        raise len(self.ids)
+        return len(self.ids)
 
     
