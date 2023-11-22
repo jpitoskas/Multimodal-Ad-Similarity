@@ -9,6 +9,10 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
 
+from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader, Subset, random_split
+
+
 
 class AdTitleDataset(Dataset):
     """
@@ -348,3 +352,39 @@ class CombinedAdDataset(Dataset):
         return len(self.ids)
 
     
+
+
+
+def class_balanced_random_split(idx2label):
+    """
+    Class-balanced dataset split into train and test partitions.
+    
+    Args:
+        idx2label (list): list of labels in the order they appear in the dataset
+        
+    Returns:
+        (tuple):
+            * train_indices (list): list of the indices of the train samples
+            * test_indices (list): list of the indices of the test samples
+    """
+# labels = [label for _, label in combined_ad_dataset.ad_title_dataset]
+
+    class_indices = {}
+    for idx, label in enumerate(idx2label):
+        if label not in class_indices:
+            class_indices[label] = []
+        class_indices[label].append(idx)
+
+    # Combine indices for train and test sets
+    train_indices = []
+    test_indices = []
+    for label, indices in class_indices.items():
+    #     test_size = int(0.2*len(indices))
+        if len(indices) > 1:
+            train_idx, test_idx = train_test_split(indices, test_size=0.15, random_state=42)  # Adjust test_size as needed
+        else:
+            train_idx, test_idx = indices.copy(),[]
+        train_indices.extend(train_idx)
+        test_indices.extend(test_idx)
+    
+    return train_indices, test_indices
