@@ -326,6 +326,7 @@ class CombinedAdDataset(Dataset):
         # return ('text', torch.tensor([17])), 42
         return (text, img), label
     
+    
     def get_label_by_idx(self, idx):
 
         text_info = self.ad_title_dataset.get_info_by_idx(idx)
@@ -339,13 +340,8 @@ class CombinedAdDataset(Dataset):
         label = label_text # Assigning one of the labels, knowing they are equal
 
         return label
-    
-        
-        
 
-        
-                
-        
+
     def __len__(self):
         """
         Returns the length of the ad dataset.
@@ -400,6 +396,21 @@ def get_dataloaders_combined(args,
                              text_data_filepath,
                              thumbnail_data_dir,
                              ):
+    
+    """
+    Function to create Dataloaders for both train and test splits of a CombinedAdDataset instance
+
+    Args:
+        args (argparse.Namespace): arguments
+        text_data_filepath (str): Path to the .txt file containing ad information
+        thumbnail_data_dir: (str): Directory where the ad thumbnail image files are stored
+
+    Returns:
+        (tuple):
+            * train_loader_combined (torch.utils.data.dataloader.DataLoader): Dataloader for the train split
+            * test_loader_combined (torch.utils.data.dataloader.DataLoader): Dataloader for the test split
+    """
+
     
     img_transf = transforms.Compose([
             transforms.ToTensor(),
