@@ -20,14 +20,14 @@ class AdTitleDataset(Dataset):
     """
     
     
-    def __init__(self, filepath, transforms=None, shuffle=True):
+    def __init__(self, filepath, transforms=None, shuffle=False):
         """
         Initialize the AdTitleDataset
         
         Args:
-        - filepath (str): Path to the .txt file containing ad information
-        - transforms (callable, optional): Transformations to apply to the data.
-        - shuffle (bool, optional): Whether to shuffle the dataset. Default is True.
+          filepath (str): Path to the .txt file containing ad information
+          transforms (callable, optional): Transformations to apply to the data.
+          shuffle (bool, optional): Whether to shuffle the dataset (Default: False).
         """
         
         
@@ -157,14 +157,14 @@ class AdThumbnailDataset(Dataset):
     Custom PyTorch dataset to handle ad thumbnails (images).
     """
     
-    def __init__(self, imgs_dir, transforms=None, shuffle=True):
+    def __init__(self, imgs_dir, transforms=None, shuffle=False):
         """
         Initialize the AdThumbnailDataset
         
         Args:
-        - imgs_dir (str): Directory where the ad thumbnail image files are stored
-        - transforms (callable, optional): Transformations to apply to the data
-        - shuffle (bool, optional): Whether to shuffle the dataset. Default is True
+          imgs_dir (str): Directory where the ad thumbnail image files are stored
+          transforms (callable, optional): Transformations to apply to the data
+          shuffle (bool, optional): Whether to shuffle the dataset (Default: False)
         """
         
         
@@ -268,14 +268,14 @@ class CombinedAdDataset(Dataset):
     def __init__(self, 
                  ad_title_dataset: AdTitleDataset,
                  ad_thumbnail_dataset: AdThumbnailDataset,
-                 shuffle=True):
+                 shuffle=False):
         """
         Initialize the CombinedAdDataset
         
         Args:
             ad_title_dataset (AdTitleDataset): Dataset containing ad title information.
             ad_thumbnail_dataset (AdThumbnailDataset): Dataset containing ad thumbnail images.
-            shuffle (bool, optional): Whether to shuffle the dataset. Default is True.
+            shuffle (bool, optional): Whether to shuffle the dataset (Default: False).
         """
         
         
@@ -355,19 +355,20 @@ class CombinedAdDataset(Dataset):
 
 
 
-def class_balanced_random_split(idx2label):
+def class_balanced_random_split(idx2label, seed=None, test_ratio_per_class=0.15):
     """
     Class-balanced dataset split into train and test partitions.
     
     Args:
-        idx2label (list): list of labels in the order they appear in the dataset
-        
+        idx2label (list): List of labels in the order they appear in the dataset
+        seed (int, optional): Random seed (Default: None)
+        test_ratio_per_class (float, optional): Percentage of test samples per class (Default: 0.15)
+
     Returns:
         (tuple):
             * train_indices (list): list of the indices of the train samples
             * test_indices (list): list of the indices of the test samples
     """
-# labels = [label for _, label in combined_ad_dataset.ad_title_dataset]
 
     class_indices = {}
     for idx, label in enumerate(idx2label):
@@ -375,16 +376,16 @@ def class_balanced_random_split(idx2label):
             class_indices[label] = []
         class_indices[label].append(idx)
 
-    # Combine indices for train and test sets
+
     train_indices = []
     test_indices = []
     for label, indices in class_indices.items():
-    #     test_size = int(0.2*len(indices))
         if len(indices) > 1:
-            train_idx, test_idx = train_test_split(indices, test_size=0.15, random_state=42)  # Adjust test_size as needed
+            train_idx, test_idx = train_test_split(indices, test_size=test_ratio_per_class, random_state=seed)
         else:
             train_idx, test_idx = indices.copy(),[]
         train_indices.extend(train_idx)
         test_indices.extend(test_idx)
     
     return train_indices, test_indices
+
