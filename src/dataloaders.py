@@ -6,6 +6,9 @@ from PIL import Image
 import random
 from torch.utils.data import Dataset, DataLoader
 
+from torchvision import transforms
+
+
 
 class AdTitleDataset(Dataset):
     """
@@ -198,6 +201,7 @@ class AdThumbnailDataset(Dataset):
                 * label (int): class id
         
         """
+
         item_id = self.ids[idx]
         item = self.data[item_id]
         
@@ -205,10 +209,16 @@ class AdThumbnailDataset(Dataset):
         filepath = self.imgs_dir.joinpath(filename)
         
         img = Image.open(filepath)
+
+        if img.mode != 'RGB': 
+            # There are Grayscale images in the dataset that we need to convert to a consistent format => RGB
+            img = img.convert('RGB')
+
+
         label = item['label']    
     
         if self.transforms:
-            raise NotImplementedError
+            img = self.transforms(img)
         
         return img, label
 
@@ -222,6 +232,25 @@ class AdThumbnailDataset(Dataset):
             (int): the length of the image dataset
         """
         return len(self.ids)
+
+    def get_info_by_idx(self, idx):
+        """
+        Returns a dictionary corresponding to the given
+        index. This dictionary contains information 
+        about the ad as {cc, label, filename}.
+        
+        Args:
+            idx (int): index of the item in the dataset
+            
+        Returns:
+            (dict):
+                * 'cc' (int): ad id
+                * 'label' (int): class id
+                * 'filename' (str): thumbnail filename
+        """
+
+        item_id = self.ids[idx]
+        return self.data[item_id]
 
 
 
@@ -286,7 +315,26 @@ class CombinedAdDataset(Dataset):
         
         label = label_text # Assigning one of the labels, knowing they are equal
         
+        # import torch
+        # return ('text', torch.tensor([17])), 42
         return (text, img), label
+    
+    def get_label_by_idx(self, idx):
+
+        text_info = self.ad_title_dataset.get_info_by_idx(idx)
+        label_text = text_info['label']
+
+        img_info = self.ad_thumbnail_dataset.get_info_by_idx(idx)
+        label_img = img_info['label']
+
+        assert label_text == label_img, f'Label mismatch between the two datasets on the item with id: {self.ids[idx]}' 
+
+        label = label_text # Assigning one of the labels, knowing they are equal
+
+        return label
+        
+        
+
         
                 
         
