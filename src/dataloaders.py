@@ -277,6 +277,9 @@ class CombinedAdDataset(Dataset):
             ad_thumbnail_dataset (AdThumbnailDataset): Dataset containing ad thumbnail images.
             shuffle (bool, optional): Whether to shuffle the dataset (Default: False).
         """
+
+        self.train_indices = None
+        self.test_indices = None
         
         
         if not isinstance(ad_title_dataset, AdTitleDataset):
@@ -336,6 +339,7 @@ class CombinedAdDataset(Dataset):
         label = label_text # Assigning one of the labels, knowing they are equal
 
         return label
+    
         
         
 
@@ -389,3 +393,39 @@ def class_balanced_random_split(idx2label, seed=None, test_ratio_per_class=0.15)
     
     return train_indices, test_indices
 
+
+
+
+def get_dataloaders_combined(args,
+                             text_data_filepath,
+                             thumbnail_data_dir,
+                             ):
+    
+    img_transf = transforms.Compose([
+            transforms.ToTensor(),
+            # transforms.Normalize(mean=mean, std=std)
+            ])
+    
+    kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.cuda else {}
+        
+
+    ad_title_dataset = AdTitleDataset(text_data_filepath)
+    ad_thumbnail_dataset = AdThumbnailDataset(thumbnail_data_dir, transforms=img_transf)
+
+    combined_ad_dataset = CombinedAdDataset(ad_title_dataset, ad_thumbnail_dataset)
+
+    idx2label = [combined_ad_dataset.get_label_by_idx(idx) for idx in range(len(combined_ad_dataset))]
+    combined_ad_dataset.train_indices, combined_ad_dataset.test_indices = class_balanced_random_split(idx2label, seed=args.seed)
+    
+    # Create Subset for each split
+    train_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.train_indices)
+    test_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.test_indices)
+
+
+    # Create DataLoader for each split
+    train_loader_combined = DataLoader(train_dataset_combined, batch_size=args.batch_size, shuffle=True)
+    test_loader_combined = DataLoader(test_dataset_combined, batch_size=args.batch_size, shuffle=False)
+
+
+
+    return train_loader_combined, test_loader_combined
