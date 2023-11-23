@@ -13,6 +13,8 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader, Subset, random_split
 
 
+from utils import *
+
 
 class AdTitleDataset(Dataset):
     """
@@ -146,6 +148,15 @@ class AdTitleDataset(Dataset):
         item_id = self.ids[idx]
         return self.data[item_id]
     
+    
+    def get_label_by_idx(self, idx):
+
+        item_id = self.ids[idx]
+        info =  self.data[item_id]
+        label = info['label']
+
+        return label
+    
 
 
 
@@ -257,6 +268,14 @@ class AdThumbnailDataset(Dataset):
         return self.data[item_id]
 
 
+    def get_label_by_idx(self, idx):
+
+        item_id = self.ids[idx]
+        info =  self.data[item_id]
+        label = info['label']
+
+        return label
+
 
 
 class CombinedAdDataset(Dataset):
@@ -326,7 +345,7 @@ class CombinedAdDataset(Dataset):
         # return ('text', torch.tensor([17])), 42
         return (text, img), label
     
-    
+
     def get_label_by_idx(self, idx):
 
         text_info = self.ad_title_dataset.get_info_by_idx(idx)
@@ -350,51 +369,107 @@ class CombinedAdDataset(Dataset):
             (int): the length of the ad dataset
         """
         return len(self.ids)
-
     
 
 
-
-def class_balanced_random_split(idx2label, seed=None, test_ratio_per_class=0.15):
-    """
-    Class-balanced dataset split into train and test partitions.
-    
-    Args:
-        idx2label (list): List of labels in the order they appear in the dataset
-        seed (int, optional): Random seed (Default: None)
-        test_ratio_per_class (float, optional): Percentage of test samples per class (Default: 0.15)
-
-    Returns:
-        (tuple):
-            * train_indices (list): list of the indices of the train samples
-            * test_indices (list): list of the indices of the test samples
-    """
-
-    class_indices = {}
-    for idx, label in enumerate(idx2label):
-        if label not in class_indices:
-            class_indices[label] = []
-        class_indices[label].append(idx)
+from torch.utils.data import Dataset
 
 
-    train_indices = []
-    test_indices = []
-    for label, indices in class_indices.items():
-        if len(indices) > 1:
-            train_idx, test_idx = train_test_split(indices, test_size=test_ratio_per_class, random_state=seed)
+class PairAdDataset(Dataset):
+    def __init__(self, ad_dataset):
+        
+        
+        self.ad_dataset_size = len(ad_dataset)
+        
+        if isinstance(self.ad_dataset, torch.utils.data.dataset.Subset):
+            self.ad_dataset = ad_dataset
+            self.original_indices = self.ad_dataset.indices
+            self.ad_labels = {idx : self.ad_dataset.dataset.get_label_by_idx(idx) for idx in self.original_indices}            
         else:
-            train_idx, test_idx = indices.copy(),[]
-        train_indices.extend(train_idx)
-        test_indices.extend(test_idx)
+            self.ad_dataset = ad_dataset
+            self.original_indices = list(range(self.ad_dataset_size))
+            self.ad_labels = {idx : self.ad_dataset.get_label_by_idx(idx) for idx in range(len(self.ad_dataset))}
+
+            
+            
     
-    return train_indices, test_indices
+    def __getitem__(self, idx):
+        
+        i =  idx // self.ad_dataset_size
+        j = idx % self.ad_dataset_size
+        
+        original_i = self.original_indices[i]
+        original_j = self.original_indices[j]
+
+        if isinstance(self.ad_dataset, torch.utils.data.dataset.Subset):
+            (text1, img1), _ = self.ad_dataset.dataset[original_i]
+            (text2, img2), _ = self.ad_dataset.dataset[original_j]
+        else:
+            (text1, img1), _ = self.ad_dataset[original_i]
+            (text2, img2), _ = self.ad_dataset[original_j]
+        
+        p1 = (text1, img1)
+        p2 = (text2, img2)
+        pair = (p1, p2)
+
+        pair_label = int(self.ad_labels[original_i] == self.ad_labels[original_j])
+        
+        return pair, pair_label
+    
+    
+
+    def __len__(self):
+        return self.ad_dataset_size**2
+    
+
+    
+    def get_label_by_idx(self, idx):
+        
+        i =  idx // self.ad_dataset_size
+        j = idx % self.ad_dataset_size
+        
+        original_i = self.original_indices[i]
+        original_j = self.original_indices[j]
+        
+        pair_label = int(self.ad_labels[original_i] == self.ad_labels[original_j])
+        
+        return pair_label
+        
+
+
+    
+
+
+def get_datasets_combined(args,
+                          text_data_filepath,
+                          thumbnail_data_dir
+                          ):
+
+    img_transf = transforms.Compose([
+            transforms.ToTensor(),
+            # transforms.Normalize(mean=mean, std=std)
+            ])
+    
+    ad_title_dataset = AdTitleDataset(text_data_filepath)
+    ad_thumbnail_dataset = AdThumbnailDataset(thumbnail_data_dir, transforms=img_transf)
+
+    combined_ad_dataset = CombinedAdDataset(ad_title_dataset, ad_thumbnail_dataset)
+
+    idx2label = [combined_ad_dataset.get_label_by_idx(idx) for idx in range(len(combined_ad_dataset))]
+    combined_ad_dataset.train_indices, combined_ad_dataset.test_indices = class_balanced_random_split(idx2label, seed=args.seed)
+    
+    # Create Subset for each split
+    train_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.train_indices)
+    test_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.test_indices)
+
+    return train_dataset_combined, test_dataset_combined
 
 
 
 
 def get_dataloaders_combined(args,
                              text_data_filepath,
-                             thumbnail_data_dir,
+                             thumbnail_data_dir
                              ):
     
     """
@@ -412,31 +487,41 @@ def get_dataloaders_combined(args,
     """
 
     
-    img_transf = transforms.Compose([
-            transforms.ToTensor(),
-            # transforms.Normalize(mean=mean, std=std)
-            ])
-    
+    train_dataset_combined, test_dataset_combined = get_datasets_combined(args, text_data_filepath, thumbnail_data_dir)
+
     kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.cuda else {}
-        
-
-    ad_title_dataset = AdTitleDataset(text_data_filepath)
-    ad_thumbnail_dataset = AdThumbnailDataset(thumbnail_data_dir, transforms=img_transf)
-
-    combined_ad_dataset = CombinedAdDataset(ad_title_dataset, ad_thumbnail_dataset)
-
-    idx2label = [combined_ad_dataset.get_label_by_idx(idx) for idx in range(len(combined_ad_dataset))]
-    combined_ad_dataset.train_indices, combined_ad_dataset.test_indices = class_balanced_random_split(idx2label, seed=args.seed)
-    
-    # Create Subset for each split
-    train_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.train_indices)
-    test_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.test_indices)
-
 
     # Create DataLoader for each split
     train_loader_combined = DataLoader(train_dataset_combined, batch_size=args.batch_size, shuffle=True)
     test_loader_combined = DataLoader(test_dataset_combined, batch_size=args.batch_size, shuffle=False)
 
 
-
     return train_loader_combined, test_loader_combined
+
+
+
+
+def get_pair_dataloaders_combined(args,
+                                  text_data_filepath, 
+                                  thumbnail_data_dir,
+                                  ):
+    
+    train_dataset_combined, test_dataset_combined = get_datasets_combined(args, text_data_filepath, thumbnail_data_dir)
+
+
+    pair_ad_dataset_train = PairAdDataset(train_dataset_combined) 
+    pair_ad_dataset_test = PairAdDataset(test_dataset_combined)
+
+
+    pair_ad_dataset_train_sampled = sample_pair_dataset(pair_ad_dataset_train, n_pairs_positive=1000, n_pairs_negative=1000)
+    pair_ad_dataset_test_sampled = sample_pair_dataset(pair_ad_dataset_test, n_pairs_positive=1000, n_pairs_negative=1000)
+
+
+    kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.cuda else {}
+
+    # Create DataLoader for each split
+    pair_train_loader_sampled = DataLoader(pair_ad_dataset_train_sampled, batch_size=args.batch_size, shuffle=True)
+    pair_test_loader_sampled = DataLoader(pair_ad_dataset_test_sampled, batch_size=args.batch_size, shuffle=False)
+
+    return pair_train_loader_sampled, pair_test_loader_sampled
+
