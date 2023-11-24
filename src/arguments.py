@@ -7,12 +7,13 @@ def parse_args():
     
     parser.add_argument('--batch_size', type=int, default=1, metavar='N', help='batch size (default: 1)')
     parser.add_argument('--n_epochs', type=int, default=100, metavar='N',  help='number of epochs to train (default: 100)')
-    parser.add_argument('--lr', type=float, default=5e-3, metavar='LR', help='learning rate (default: 5e-3)')
+    
     # parser.add_argument('--warmup_epochs', type=int, default=10, metavar='N', help='number of warmup training epochs (default: 10)')
     # parser.add_argument('--warmup_start_factor', type=float, default=0.1, help='factor of the base lr to determine initial warmup lr (default: 0.1)')
-    # parser.add_argument('--weight_decay', type=float, default=0.05)
-    # parser.add_argument('--beta1', type=float, default=0.9)
-    # parser.add_argument('--beta2', type=float, default=0.999)
+    parser.add_argument('--lr', type=float, default=5e-4, metavar='LR', help='learning rate (default: 5e-4)')
+    parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay coefficient ')
+    parser.add_argument('--beta1', type=float, default=0.9, help='beta1 coefficient')
+    parser.add_argument('--beta2', type=float, default=0.999, help='beta2 coefficient')
     # parser.add_argument('--scheduler', default='multistep', choices=['multistep', 'cosine', 'linear', 'exponential'], help='scheduler (multistep, cosine, linear, exponential)')
     # parser.add_argument('--milestones', nargs='+', type=float, default=[0.5, 0.8, 0.9], help="list of scheduler's milestones (floats between 0 and 1), only when scheduler='multistep'")
     # parser.add_argument('--llrd_factor', type=float, default=0.9, help="layer-wise learning rate decay factor (default: 0.9)")
@@ -37,7 +38,19 @@ def parse_args():
     # parser.add_argument('--score_threshold', type=float, default=0.05)
     # parser.add_argument('--excluded_categories', nargs='+', type=str, default=[], help='pixel mean per channel for data normalization')
     parser.add_argument('--num_workers', type=int, default=1)
+
+
+    parser.add_argument('--n_pairs_train', type=int, default=10000)
+    parser.add_argument('--n_pairs_test', type=int, default=2000)
+    parser.add_argument('--positive_percentage_train', type=float, default=0.5)
+    parser.add_argument('--positive_percentage_test', type=float, default=0.5)
     
+    parser.add_argument('--model_type', type=str, default="clip")
+    parser.add_argument('--pretrained_model_name', type=str, default="openai/clip-vit-base-patch32")
+
+
+    parser.add_argument('--margin', type=float, default=1.0, help='Contrastive Loss margin hyperparameter ')
+
     args = parser.parse_args()
 
     return args
