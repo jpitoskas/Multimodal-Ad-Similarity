@@ -2,6 +2,8 @@ import torch
 from torch.utils.data import Subset
 from sklearn.model_selection import train_test_split
 
+from model import *
+
 
 
 
@@ -42,6 +44,10 @@ def class_balanced_random_split(idx2label, seed=None, test_ratio_per_class=0.15)
 
 
 def get_positive_pairs_indices(pair_ad_dataset, pair_labels):
+    """
+    Helper function to get the positive pairs indices. 
+    Note: discards identical pairs
+    """
     
     # Get indices of positive pairs
     positive_pairs_indices = ((pair_labels==1).nonzero(as_tuple=True)[0])
@@ -54,6 +60,9 @@ def get_positive_pairs_indices(pair_ad_dataset, pair_labels):
 
 
 def get_negative_pairs_indices(pair_ad_dataset, pair_labels):
+    """
+    Helper function to get the negative pairs indices
+    """
     
     # Get indices of negative pairs
     negative_pairs_indices = ((pair_labels==0).nonzero(as_tuple=True)[0])
@@ -63,6 +72,9 @@ def get_negative_pairs_indices(pair_ad_dataset, pair_labels):
 
 
 def sample_pair_dataset(pair_ad_dataset, n_pairs_positive=1000, n_pairs_negative=1000):
+    """
+    Helper function to sample positive and negative example from a PairAdDataset object
+    """
     
     
     pair_labels = torch.tensor([pair_ad_dataset.get_label_by_idx(idx) for idx in range(len(pair_ad_dataset))])
@@ -95,5 +107,63 @@ def sample_pair_dataset(pair_ad_dataset, n_pairs_positive=1000, n_pairs_negative
     pair_ad_dataset_sampled = Subset(pair_ad_dataset, pairs_indices_sampled)
     
     return pair_ad_dataset_sampled
+
+
+def get_param_groups(model, model_type):
+    """
+    Function to return the parameter groups of a MultiModalSiameseNetwork object.
+
+    Args:
+        model (MultiModalSiameseNetwork): the Multi-Modal Siamese Network
+        model_type (str): the Multi-Modal model type (e.g. 'clip' for CLIP)
+
+    Returns:
+        (list): the list of the parameter groups
+    """
+
+    if not isinstance(model, MultiModalSiameseNetwork):
+        raise ValueError("model should be of type MultiModalSiameseNetwork")
+
+
+    match model_type:
+        case "clip":
+            param_groups = [
+                        {'params': model.multimodal_network.clip_model.text_model.parameters(), 'name': 'clip_text_model'},
+                        {'params': model.multimodal_network.clip_model.vision_model.parameters(), 'name': 'clip_visual_model'},
+                        {'params': model.multimodal_network.clip_model.text_projection.parameters(), 'name': 'clip_text_projection'},
+                        {'params': model.multimodal_network.clip_model.visual_projection.parameters(), 'name': 'clip_visual_projection'}
+                        ]
+        case _:
+            raise NotImplementedError(f"Model type '{model_type}' is not yet supported")
+    
+    return param_groups
+
+
+
+def get_param_groups_for_finetuning(model, model_type):
+    """
+    Function to return the parameter groups of a MultiModalSiameseNetwork object for fine-tuning.
+
+    Args:
+        model (MultiModalSiameseNetwork): the Multi-Modal Siamese Network
+        model_type (str): the Multi-Modal model type (e.g. 'clip' for CLIP)
+
+    Returns:
+        (list): the list of the parameter groups for fine-tuning
+    """
+
+    if not isinstance(model, MultiModalSiameseNetwork):
+        raise ValueError("model should be of type MultiModalSiameseNetwork")
+
+
+    match model_type:
+        case "clip":
+            param_groups = get_param_groups(model, model_type)[-2:]
+        case _:
+            raise NotImplementedError(f"Model type '{model_type}' is not yet supported")
+    
+    return param_groups
+
+
 
 
