@@ -2,6 +2,7 @@
 
 from dataloaders import *
 from arguments import *
+from model import *
 
 from pathlib import Path
 import sys
@@ -11,8 +12,11 @@ import random
 import numpy as np
 
 
+from transformers import AutoProcessor, CLIPModel
 
 from torchvision import transforms
+import torch.optim as optim
+from tqdm import tqdm
 
 
 
@@ -68,35 +72,94 @@ if __name__ == '__main__':
 
 
 
-    # class EmptyClass:
-    #     pass
-
-    # # Instantiating the EmptyClass
-    # args = EmptyClass()
-    # args.batch_size = 128
-    # args.num_workers = 0
-    # args.cuda = True
 
 
     logging.info("\nArguments:")
     logging.info('\n'.join(f'- {k}: {v}' for k, v in vars(args).items()))
+    logging.info('\n'.join(f'args.{k}={v}' for k, v in vars(args).items()))
+    # exit()
 
 
 
+    logging.info("\n\nLoading Dataset...")
 
-    logging.info("\n\nLoading Dataset...")   
-    train_loader_combined, test_loader_combined = get_dataloaders_combined(args, text_data_filepath, thumbnail_data_dir)
-
-    logging.info(f'Train: {len(train_loader_combined.dataset)} - Test: {len(test_loader_combined.dataset)}')
-
+    pair_train_loader, pair_test_loader = get_pair_dataloaders_combined(args, text_data_filepath, thumbnail_data_dir)
+    logging.info(f'Train: {len(pair_train_loader.dataset)} - Test: {len(pair_test_loader.dataset)}')
+    
 
     
-    for i, ((text, img), label) in enumerate(train_loader_combined):
-        break
 
-        if i % 10 == 0:
-            break
-            print(i)
+    # Model
+    match args.model_type:
+        case "clip":
+            processor = AutoProcessor.from_pretrained(args.pretrained_model_name)
+            clip_model = CLIPModel.from_pretrained(args.pretrained_model_name).to(device)
+            multimodal_network = CLIPModelModified(clip_model).to(device)
+        case _:
+            raise NotImplementedError(f"Model type '{args.model_type}' is not yet supported")
+    
+    model = MultiModalSiameseNetwork(multimodal_network).to(device)
+
+
+    # Loss
+    loss_fn = ContrastiveLoss(margin=args.margin)
+
+
+    # Optimizer
+    param_groups = get_param_groups_for_finetuning(model, args.model_type)
+    optimizer = optim.AdamW(param_groups, lr=args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
+
+
+     # Trainable parameters
+    trainable_params = sum(p.numel() for p in optimizer.param_groups[0]['params'] if p.requires_grad)
+    logging.info(f'\nTrainable parameters: {trainable_params:,}\n')
+
+
+
+
+    # Train function
+    def train(epoch, pair_loader, model, processor, loss_fn, optimizer, device):
+
+        model.train()
+        # train_loss = 0
+        for _, (data, targets) in enumerate(tqdm(pair_loader)):
+
+            (text1, image1), (text2, image2) = data
+     
+            image1 = image1.to(device)
+            image2 = image2.to(device)
+
+            targets = targets.to(device)
+            
+            inputs1 = processor(text=text1, images=image1, return_tensors="pt", padding=True, truncation=True)
+            inputs2 = processor(text=text2, images=image1, return_tensors="pt", padding=True, truncation=True)
+
+            # Move tensors to the device
+            inputs1 = {key: value.to(device) for key, value in inputs1.items()}
+            inputs2 = {key: value.to(device) for key, value in inputs2.items()}
+
+
+
+            optimizer.zero_grad()
+
+            outputs1, outputs2 = model(inputs1, inputs2)
+
+            loss = loss_fn(outputs1, outputs2)
+            # train_loss += loss.item()
+            
+            loss.backward()
+            optimizer.step()
+            
+
+
+        # train_loss /= len(pair_loader.dataset)
+
+        # return train_loss
+        return
+
+
+
+
 
 
 
