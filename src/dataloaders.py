@@ -378,15 +378,13 @@ from torch.utils.data import Dataset
 class PairAdDataset(Dataset):
     def __init__(self, ad_dataset):
         
-        
-        self.ad_dataset_size = len(ad_dataset)
+        self.ad_dataset = ad_dataset
+        self.ad_dataset_size = len(self.ad_dataset)
         
         if isinstance(self.ad_dataset, torch.utils.data.dataset.Subset):
-            self.ad_dataset = ad_dataset
             self.original_indices = self.ad_dataset.indices
             self.ad_labels = {idx : self.ad_dataset.dataset.get_label_by_idx(idx) for idx in self.original_indices}            
         else:
-            self.ad_dataset = ad_dataset
             self.original_indices = list(range(self.ad_dataset_size))
             self.ad_labels = {idx : self.ad_dataset.get_label_by_idx(idx) for idx in range(len(self.ad_dataset))}
 
@@ -513,8 +511,16 @@ def get_pair_dataloaders_combined(args,
     pair_ad_dataset_test = PairAdDataset(test_dataset_combined)
 
 
-    pair_ad_dataset_train_sampled = sample_pair_dataset(pair_ad_dataset_train, n_pairs_positive=1000, n_pairs_negative=1000)
-    pair_ad_dataset_test_sampled = sample_pair_dataset(pair_ad_dataset_test, n_pairs_positive=1000, n_pairs_negative=1000)
+
+    n_pairs_positive_train = int(args.positive_percentage_train*args.n_pairs_train)
+    n_pairs_negative_train = args.n_pairs_train - n_pairs_positive_train
+
+    n_pairs_positive_test = int(args.positive_percentage_test*args.n_pairs_test)
+    n_pairs_negative_test = args.n_pairs_test - n_pairs_positive_test
+
+
+    pair_ad_dataset_train_sampled = sample_pair_dataset(pair_ad_dataset_train, n_pairs_positive=n_pairs_positive_train, n_pairs_negative=n_pairs_negative_train)
+    pair_ad_dataset_test_sampled = sample_pair_dataset(pair_ad_dataset_test, n_pairs_positive=n_pairs_positive_test, n_pairs_negative=n_pairs_negative_test)
 
 
     kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.cuda else {}
