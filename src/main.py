@@ -89,7 +89,6 @@ if __name__ == '__main__':
 
     new_model_dir = experiments_dir.joinpath(model_dir_prefix + new_id)
     new_model_dir.mkdir()
-    exit()
 
 
     # Logging
@@ -131,9 +130,10 @@ if __name__ == '__main__':
 
 
     logging.info("\n\nLoading Dataset...")
-    pair_train_loader, pair_test_loader = get_pair_dataloaders_combined(args, text_data_filepath, thumbnail_data_dir)
-    logging.info(f'Train: {len(pair_train_loader.dataset)} - Test: {len(pair_test_loader.dataset)}')
+    pair_train_loader, pair_val_loader, pair_test_loader = get_pair_dataloaders_combined(args, text_data_filepath, thumbnail_data_dir)
+    logging.info(f'Train: {len(pair_train_loader.dataset)} - Val: {len(pair_val_loader.dataset)} - Test: {len(pair_test_loader.dataset)}')
     
+    exit()
 
     
 

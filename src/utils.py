@@ -30,16 +30,22 @@ def class_balanced_random_split(idx2label, seed=None, test_ratio_per_class=0.15)
 
 
     train_indices = []
+    val_indices = []
     test_indices = []
     for label, indices in class_indices.items():
         if len(indices) > 1:
             train_idx, test_idx = train_test_split(indices, test_size=test_ratio_per_class, random_state=seed)
+            if len(train_idx) > 1:
+                train_idx, val_idx = train_test_split(train_idx, test_size=test_ratio_per_class, random_state=seed)
+            else:
+                val_idx = []
         else:
             train_idx, test_idx = indices.copy(), []
         train_indices.extend(train_idx)
+        val_indices.extend(val_idx)
         test_indices.extend(test_idx)
     
-    return train_indices, test_indices
+    return train_indices, val_indices, test_indices
 
 
 

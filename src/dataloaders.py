@@ -298,6 +298,7 @@ class CombinedAdDataset(Dataset):
         """
 
         self.train_indices = None
+        self.val_indices = None
         self.test_indices = None
         
         
@@ -454,13 +455,16 @@ def get_datasets_combined(args,
     combined_ad_dataset = CombinedAdDataset(ad_title_dataset, ad_thumbnail_dataset)
 
     idx2label = [combined_ad_dataset.get_label_by_idx(idx) for idx in range(len(combined_ad_dataset))]
-    combined_ad_dataset.train_indices, combined_ad_dataset.test_indices = class_balanced_random_split(idx2label, seed=args.seed)
+    combined_ad_dataset.train_indices, combined_ad_dataset.val_indices, combined_ad_dataset.test_indices = class_balanced_random_split(idx2label, seed=args.seed)
+
+
     
     # Create Subset for each split
     train_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.train_indices)
+    val_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.val_indices)
     test_dataset_combined = Subset(combined_ad_dataset, combined_ad_dataset.test_indices)
 
-    return train_dataset_combined, test_dataset_combined
+    return train_dataset_combined, val_dataset_combined, test_dataset_combined
 
 
 
@@ -481,20 +485,22 @@ def get_dataloaders_combined(args,
     Returns:
         (tuple):
             * train_loader_combined (torch.utils.data.dataloader.DataLoader): Dataloader for the train split
+            * val_loader_combined (torch.utils.data.dataloader.DataLoader): Dataloader for the val split
             * test_loader_combined (torch.utils.data.dataloader.DataLoader): Dataloader for the test split
     """
 
     
-    train_dataset_combined, test_dataset_combined = get_datasets_combined(args, text_data_filepath, thumbnail_data_dir)
+    train_dataset_combined, val_dataset_combined, test_dataset_combined = get_datasets_combined(args, text_data_filepath, thumbnail_data_dir)
 
     kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.cuda else {}
 
     # Create DataLoader for each split
     train_loader_combined = DataLoader(train_dataset_combined, batch_size=args.batch_size, shuffle=True)
+    val_loader_combined = DataLoader(val_dataset_combined, batch_size=args.batch_size, shuffle=True)
     test_loader_combined = DataLoader(test_dataset_combined, batch_size=args.batch_size, shuffle=False)
 
 
-    return train_loader_combined, test_loader_combined
+    return train_loader_combined, val_loader_combined, test_loader_combined
 
 
 
@@ -504,10 +510,11 @@ def get_pair_dataloaders_combined(args,
                                   thumbnail_data_dir,
                                   ):
     
-    train_dataset_combined, test_dataset_combined = get_datasets_combined(args, text_data_filepath, thumbnail_data_dir)
+    train_dataset_combined, val_dataset_combined, test_dataset_combined = get_datasets_combined(args, text_data_filepath, thumbnail_data_dir)
 
 
-    pair_ad_dataset_train = PairAdDataset(train_dataset_combined) 
+    pair_ad_dataset_train = PairAdDataset(train_dataset_combined)
+    pair_ad_dataset_val = PairAdDataset(val_dataset_combined)
     pair_ad_dataset_test = PairAdDataset(test_dataset_combined)
 
 
@@ -515,11 +522,15 @@ def get_pair_dataloaders_combined(args,
     n_pairs_positive_train = int(args.positive_percentage_train*args.n_pairs_train)
     n_pairs_negative_train = args.n_pairs_train - n_pairs_positive_train
 
+    n_pairs_positive_val = int(args.positive_percentage_val*args.n_pairs_val)
+    n_pairs_negative_val = args.n_pairs_val - n_pairs_positive_val
+
     n_pairs_positive_test = int(args.positive_percentage_test*args.n_pairs_test)
     n_pairs_negative_test = args.n_pairs_test - n_pairs_positive_test
 
 
     pair_ad_dataset_train_sampled = sample_pair_dataset(pair_ad_dataset_train, n_pairs_positive=n_pairs_positive_train, n_pairs_negative=n_pairs_negative_train)
+    pair_ad_dataset_val_sampled = sample_pair_dataset(pair_ad_dataset_val, n_pairs_positive=n_pairs_positive_val, n_pairs_negative=n_pairs_negative_val)
     pair_ad_dataset_test_sampled = sample_pair_dataset(pair_ad_dataset_test, n_pairs_positive=n_pairs_positive_test, n_pairs_negative=n_pairs_negative_test)
 
 
@@ -527,7 +538,8 @@ def get_pair_dataloaders_combined(args,
 
     # Create DataLoader for each split
     pair_train_loader_sampled = DataLoader(pair_ad_dataset_train_sampled, batch_size=args.batch_size, shuffle=True)
+    pair_val_loader_sampled = DataLoader(pair_ad_dataset_val_sampled, batch_size=args.batch_size, shuffle=False)
     pair_test_loader_sampled = DataLoader(pair_ad_dataset_test_sampled, batch_size=args.batch_size, shuffle=False)
 
-    return pair_train_loader_sampled, pair_test_loader_sampled
+    return pair_train_loader_sampled, pair_val_loader_sampled, pair_test_loader_sampled
 

@@ -41,8 +41,10 @@ def parse_args():
 
 
     parser.add_argument('--n_pairs_train', type=int, default=10000)
-    parser.add_argument('--n_pairs_test', type=int, default=2000)
+    parser.add_argument('--n_pairs_val', type=int, default=2500)
+    parser.add_argument('--n_pairs_test', type=int, default=2500)
     parser.add_argument('--positive_percentage_train', type=float, default=0.5)
+    parser.add_argument('--positive_percentage_val', type=float, default=0.5)
     parser.add_argument('--positive_percentage_test', type=float, default=0.5)
     
     # parser.add_argument('--model_type', type=str, default="clip")
