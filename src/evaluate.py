@@ -84,7 +84,7 @@ def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange
 
 
 def predict_by_thresholds(similarities, thresholds):
-    preds = (torch.tensor(similarities) > thresholds.unsqueeze(1)).int()
+    preds = (similarities > thresholds.unsqueeze(1)).int()
     return preds
 
 
@@ -94,6 +94,8 @@ def get_classification_metrics_by_threholds(y_true, y_pred, beta=0.5):
     fp = torch.logical_and(y_pred.bool(), ~y_true.view(1, -1).bool()).sum(dim=1)
     tn = torch.logical_and(~y_pred.bool(), ~y_true.view(1, -1).bool()).sum(dim=1)
     fn = torch.logical_and(~y_pred.bool(), y_true.view(1, -1).bool()).sum(dim=1)
+
+    print(tp, fp, tn, fn)
 
 
     accuracy = (tp + tn) / (tn + fp + fn + tp)
@@ -114,6 +116,11 @@ def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimi
     y_pred = predict_by_thresholds(similarities, thresholds)
     classification_metrics = get_classification_metrics_by_threholds(y_true, y_pred)
 
+
+    if return_auc:
+        pr_auc = auc(classification_metrics['recall'], classification_metrics['precision'])
+
+
     max_idx = classification_metrics[optimization_metric].argmax()
 
     optimal_metrics = {metric_key : metric_by_threshold[max_idx].item() for metric_key, metric_by_threshold in classification_metrics.items()}
@@ -122,11 +129,9 @@ def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimi
 
 
     if return_auc:
-        pr_auc = auc(optimal_metrics['recall'], optimal_metrics['precision'])
         return optimal_metrics, optimal_threshold, pr_auc
-
-
-    return optimal_metrics, optimal_threshold
+    else:
+        return optimal_metrics, optimal_threshold
 
 
     
