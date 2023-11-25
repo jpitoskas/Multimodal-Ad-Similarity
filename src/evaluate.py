@@ -1,7 +1,8 @@
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, auc
+
 
 
 # Val/Test function
@@ -48,14 +49,18 @@ def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange
 
         
         if similarity == 'cosine':
-            metrics, optimal_threshold = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities), y_true=torch.tensor(all_targets), thresholds=thresholds, optimization_metric=optimization_metric)
+            metrics, optimal_threshold, auc = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities),
+                                                                                  y_true=torch.tensor(all_targets),
+                                                                                  thresholds=thresholds,
+                                                                                  optimization_metric=optimization_metric,
+                                                                                  return_auc=True)
         else:
             NotImplementedError('Unsupported similarity measurement')
             
 
         running_loss /= len(pair_loader.dataset)
         
-        return running_loss, metrics, optimal_threshold
+        return running_loss, metrics, optimal_threshold, auc
 
 
     
@@ -83,24 +88,28 @@ def predict_by_thresholds(similarities, thresholds):
     return preds
 
 
-def get_classification_metrics_by_threholds(y_true, y_pred):
+def get_classification_metrics_by_threholds(y_true, y_pred, beta=0.5):
 
     tp = torch.logical_and(y_pred.bool(), y_true.view(1, -1).bool()).sum(dim=1)
     fp = torch.logical_and(y_pred.bool(), ~y_true.view(1, -1).bool()).sum(dim=1)
     tn = torch.logical_and(~y_pred.bool(), ~y_true.view(1, -1).bool()).sum(dim=1)
     fn = torch.logical_and(~y_pred.bool(), y_true.view(1, -1).bool()).sum(dim=1)
 
+
     accuracy = (tp + tn) / (tn + fp + fn + tp)
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1_score = tp / (tp + 0.5 * (fp + fn))
+    f_beta = (1 + beta**2) * (precision * recall / ((beta**2)*precision + recall))
 
-    classification_metrics = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1_score': f1_score}
+
+
+    classification_metrics = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1_score': f1_score, 'f_beta': f_beta}
 
     return classification_metrics
 
 
-def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimization_metric='precision'):
+def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimization_metric='precision', return_auc=True):
 
     y_pred = predict_by_thresholds(similarities, thresholds)
     classification_metrics = get_classification_metrics_by_threholds(y_true, y_pred)
@@ -108,7 +117,14 @@ def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimi
     max_idx = classification_metrics[optimization_metric].argmax()
 
     optimal_metrics = {metric_key : metric_by_threshold[max_idx].item() for metric_key, metric_by_threshold in classification_metrics.items()}
+
     optimal_threshold = thresholds[max_idx].item()
+
+
+    if return_auc:
+        pr_auc = auc(optimal_metrics['recall'], optimal_metrics['precision'])
+        return optimal_metrics, optimal_threshold, pr_auc
+
 
     return optimal_metrics, optimal_threshold
 

@@ -241,7 +241,7 @@ if __name__ == '__main__':
     logging.info(f"Fine-tune model on target task for {args.n_epochs} epochs:")
     for epoch in range(init_epoch, args.n_epochs + init_epoch):
         train_loss = train(epoch, **train_kwargs)
-        val_loss, metrics, optimal_threshold = test(**val_kwargs)
+        val_loss, metrics, optimal_threshold, auc = test(**val_kwargs)
 
         train_losses.append(train_loss)
         val_losses.append(val_loss)
@@ -250,8 +250,8 @@ if __name__ == '__main__':
         logging.info(
             "\n" + 
             f"Epoch [{epoch}/{args.n_epochs}]: Train Loss: {train_loss:.4f}" + ' | ' + f"Validation Loss: {val_loss:.4f}" + "\n" +
-            " "*len(f"Epoch [{epoch}/{args.n_epochs}]: ") + f"Validation Metrics (threshold={optimal_threshold:.2f}): " +
-            " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()]) +
+            " "*len(f"Epoch [{epoch}/{args.n_epochs}]: ") + f"Validation Metrics (threshold={optimal_threshold:.2f}): \n" + "           "
+            " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()]) + f" | AUC: {auc:.4f}"
             "\n"
         )
         
