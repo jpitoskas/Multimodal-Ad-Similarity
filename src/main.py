@@ -245,9 +245,11 @@ if __name__ == '__main__':
         val_metrics.append(metrics[args.evaluation_metric])
 
         logging.info(
-            f"Epoch [{epoch}/{args.n_epochs}]: Train Loss: {train_loss:.4f}" + ' | ' + f"Validation Loss: {val_loss:.4f}" +
+            "\n" + 
+            f"Epoch [{epoch}/{args.n_epochs}]: Train Loss: {train_loss:.4f}" + ' | ' + f"Validation Loss: {val_loss:.4f}" + "\n" +
             " "*len(f"Epoch [{epoch}/{args.n_epochs}]: ") + f"Validation Metrics (threshold={optimal_threshold:.2f}): " +
-            " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()])
+            " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()]) +
+            "\n"
         )
         
         if metrics[args.evaluation_metric] > best_metric_score:
@@ -264,7 +266,7 @@ if __name__ == '__main__':
                         }, os.path.join(new_model_dir, f"checkpoint_{new_id}.pt"))
             
     
-    logging.info(f"\nBest {args.evaluation_metric.capitalize()} mAP: {best_metric_score:.4f} on epoch {epoch_best_bbox_map}.")
+    logging.info(f"\nBest {args.evaluation_metric.capitalize()}: {best_metric_score:.4f} on epoch {epoch_best_bbox_map}.")
     # logging.info(f"\nBest validation loss: {best_val_loss:.4f} on epoch {best_val_epoch}.")
             
     with open(os.path.join(new_model_dir, "train_losses.csv"), "w") as f:
