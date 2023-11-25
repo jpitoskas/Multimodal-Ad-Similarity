@@ -315,13 +315,13 @@ if __name__ == '__main__':
 
     # Plot Validation Eval metric
     plt.figure(figsize=(10,7))
-    plt.title(f"Validation {args.evalutation_metric.capitalize()}")
+    plt.title(f"Validation {args.evaluation_metric.capitalize()}")
     plt.plot(val_metrics)
     plt.xlabel("Epochs")
-    plt.ylabel(args.evalutation_metric.capitalize())
+    plt.ylabel(args.evaluation_metric.capitalize())
     plt.legend()
     plt.grid()
-    plt.savefig(os.path.join(new_model_dir, f'{args.evalutation_metric}_{new_id}.png'))
+    plt.savefig(os.path.join(new_model_dir, f'{args.evaluation_metric}_{new_id}.png'))
 
 
     [logging.root.removeHandler(handler) for handler in logging.root.handlers[:]]
