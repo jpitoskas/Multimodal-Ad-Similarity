@@ -101,9 +101,9 @@ if __name__ == '__main__':
     # info logger for saving command line outputs during training
     logging.basicConfig(level=logging.INFO, format='%(message)s',
                         handlers=[logging.StreamHandler(sys.stdout),
-                                  logging.FileHandler(os.path.join(new_model_dir, f'trainlogs_{new_id}.log'))
-                                  
-        #            ])
+                                  logging.FileHandler(os.path.join(new_model_dir, f'trainlogs_{new_id}.log'))                              
+                   ])
+    
         #  handlers=[logging.FileHandler(os.path.join(new_model_dir, f'trainlogs_{new_id}.log'))
         #            ])
     
