@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
     # parser.add_argument('--backbone_model_config_name', default='microsoft/swin-tiny-patch4-window7-224', help='backbone model configuration name')
-    # parser.add_argument('--load_model_id', type=int, default=None)
+    parser.add_argument('--load_model_id', type=int, default=None)
     # parser.add_argument('--load_backbone_id', type=int, default=None)
     # parser.add_argument('--fpn_out_channels', type=int, default=128, help='FPN output channels (default: 128)')
     # # parser.add_argument('--num_classes', type=int, default=19, help='number of object categories, including background (default: 19)')
@@ -38,6 +38,8 @@ def parse_args():
     # parser.add_argument('--score_threshold', type=float, default=0.05)
     # parser.add_argument('--excluded_categories', nargs='+', type=str, default=[], help='pixel mean per channel for data normalization')
     parser.add_argument('--num_workers', type=int, default=1)
+
+    parser.add_argument('--evaluation_metric', type=str, default='precision')
 
 
     parser.add_argument('--n_pairs_train', type=int, default=10000)
