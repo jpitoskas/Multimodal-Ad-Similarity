@@ -319,7 +319,6 @@ if __name__ == '__main__':
     plt.plot(val_metrics)
     plt.xlabel("Epochs")
     plt.ylabel(args.evaluation_metric.capitalize())
-    plt.legend()
     plt.grid()
     plt.savefig(os.path.join(new_model_dir, f'{args.evaluation_metric}_{new_id}.png'))
 
