@@ -147,6 +147,7 @@ if __name__ == '__main__':
     match args.model_type:
         case "clip":
             processor = AutoProcessor.from_pretrained(args.pretrained_model_name)
+            processor.image_processor.do_rescale = 'False'
             clip_model = CLIPModel.from_pretrained(args.pretrained_model_name).to(device)
             multimodal_network = CLIPModelModified(clip_model).to(device)
         case _:
