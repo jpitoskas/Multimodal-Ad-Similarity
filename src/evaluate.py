@@ -49,14 +49,14 @@ def test(pair_loader, model, processor, loss_fn, device, similarity='cosine', si
         
         if similarity == 'cosine':    
             thresholds = torch.arange(-1, 1, similarity_sampling_step)
-            metrics = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities), y_true=torch.tensor(all_targets), thresholds=thresholds, optimization_metric=optimization_metric)
+            metrics, optimal_threshold = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities), y_true=torch.tensor(all_targets), thresholds=thresholds, optimization_metric=optimization_metric)
         else:
             NotImplementedError('Unsupported similarity measurement')
             
 
         running_loss /= len(pair_loader.dataset)
         
-        return running_loss, metrics
+        return running_loss, metrics, optimal_threshold
 
 
     
