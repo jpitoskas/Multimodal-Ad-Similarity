@@ -3,6 +3,8 @@
 from dataloaders import *
 from arguments import *
 from model import *
+from train import *
+from evaluate import *
 
 from pathlib import Path
 import sys
@@ -20,6 +22,9 @@ from tqdm import tqdm
 import warnings
 import os
 import datetime
+
+import matplotlib.pyplot as plt
+import json
 
 
 
@@ -133,7 +138,6 @@ if __name__ == '__main__':
     pair_train_loader, pair_val_loader, pair_test_loader = get_pair_dataloaders_combined(args, text_data_filepath, thumbnail_data_dir)
     logging.info(f'Train: {len(pair_train_loader.dataset)} - Val: {len(pair_val_loader.dataset)} - Test: {len(pair_test_loader.dataset)}')
     
-    exit()
 
     
 
@@ -163,49 +167,144 @@ if __name__ == '__main__':
 
 
 
-    # Train function
-    def train(epoch, pair_loader, model, processor, loss_fn, optimizer, device):
 
-        model.train()
-        # train_loss = 0
-        for _, (data, targets) in enumerate(tqdm(pair_loader)):
 
-            (text1, image1), (text2, image2) = data
-     
-            image1 = image1.to(device)
-            image2 = image2.to(device)
 
-            targets = targets.to(device)
+
+    experiments_dir = working_dir/'experiments'/args.pretrained_model_name.replace('/','_')
+    # Load a previously trained model to train more
+    if args.load_model_id:
+        load_dir = os.path.join(experiments_dir, model_dir_prefix + str(args.load_model_id))
+        load_path = os.path.join(load_dir, f"checkpoint_{args.load_model_id}.pt")
+
+        if not os.path.isfile(load_path):
+            raise ValueError(f"Cannot find chesckpoint_{args.load_model_id}.pt in {load_dir}")
+        
+        logging.info(f'\nLoading {model_dir_prefix}{args.load_model_id} from "{load_path}"\n')
+        checkpoint = torch.load(load_path)
+        # Loading model, optimizer, epoch, train_losses, val_losses
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model = model.to(device)
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        init_epoch = checkpoint['epoch']
+        train_losses = checkpoint['train_losses']
+        val_losses = checkpoint['val_losses']
+        val_losses = checkpoint['val_metrics']
+    else:
+        init_epoch = 1
+        train_losses = []
+        val_losses = []
+        val_metrics = []
+
+
+     # Parallelize if more than 1 GPU
+    if torch.cuda.device_count() > 1:
+        logging.info(f'\nUsing {torch.cuda.device_count()} GPU(s).\n')
+        model = nn.DataParallel(model).to(device)
+        
+
+    # Train, Val, Test kwargs
+    train_kwargs = {'pair_loader': pair_train_loader,
+                    'model': model,
+                    'processor': processor,
+                    'loss_fn': loss_fn,
+                    'optimizer': optimizer,
+                    'device': device,
+                    }
+
+    val_kwargs = {'pair_loader': pair_train_loader,
+                  'model': model,
+                  'processor': processor,
+                  'loss_fn': loss_fn,
+                  'device': device,
+                  }
+
+    test_kwargs = {'pair_loader': pair_train_loader,
+                   'model': model,
+                   'processor': processor,
+                   'loss_fn': loss_fn,
+                   'device': device,
+                   'similarity': 'cosine',
+                   'similarity_sampling_step': 0.01,
+                   'optimization_metric': args.evaluation_metric,
+                   }
+    
+
+    best_metric_score, best_epoch = 0, 0 
+
+    # TRAINING LOOP
+    logging.info(f"Fine-tune model on target task for {args.n_epochs} epochs:")
+    for epoch in range(init_epoch, args.n_epochs + init_epoch):
+        train_loss = train(epoch, **train_kwargs)
+        val_loss, metrics = test(**val_kwargs)
+
+        train_losses.append(train_loss)
+        val_losses.append(val_loss)
+        val_metrics.append(metrics[args.evaluation_metric])
+
+        logging.info(
+            f"Epoch [{epoch}/{args.n_epochs}]: Train Loss: {train_loss:.4f}" + ' | ' + f"Validation Loss: {val_loss:.4f}" +
+            " "*len(f"Epoch [{epoch}/{args.n_epochs}]: ") + f"Validation Metrics: " +
+            " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()])
+        )
+        
+        if metrics[args.evaluation_metric] > best_metric_score:
+                   
+            best_metric_score = metrics[args.evaluation_metric]
+            epoch_best_bbox_map = epoch
+            torch.save({
+                        'epoch': epoch,
+                        'model_state_dict': model.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict(),
+                        'train_losses': train_losses,
+                        'val_losses': val_losses,
+                        'val_metrics': val_metrics,
+                        }, os.path.join(new_model_dir, f"checkpoint_{new_id}.pt"))
             
-            inputs1 = processor(text=text1, images=image1, return_tensors="pt", padding=True, truncation=True)
-            inputs2 = processor(text=text2, images=image1, return_tensors="pt", padding=True, truncation=True)
-
-            # Move tensors to the device
-            inputs1 = {key: value.to(device) for key, value in inputs1.items()}
-            inputs2 = {key: value.to(device) for key, value in inputs2.items()}
-
-
-
-            optimizer.zero_grad()
-
-            outputs1, outputs2 = model(inputs1, inputs2)
-
-            loss = loss_fn(outputs1, outputs2)
-            # train_loss += loss.item()
+    
+    logging.info(f"\nBest {args.evaluation_metric.capitalize()} mAP: {best_metric_score:.4f} on epoch {epoch_best_bbox_map}.")
+    # logging.info(f"\nBest validation loss: {best_val_loss:.4f} on epoch {best_val_epoch}.")
             
-            loss.backward()
-            optimizer.step()
-            
+    with open(os.path.join(new_model_dir, "train_losses.csv"), "w") as f:
+        wr = csv.writer(f)
+        wr.writerows([train_losses])
+
+    with open(os.path.join(new_model_dir, "val_losses.csv"), "w") as f:
+        wr = csv.writer(f)
+        wr.writerows([val_losses])
+    
+    with open(os.path.join(new_model_dir, "val_metrics.csv"), "w") as f:
+        wr = csv.writer(f)
+        wr.writerows([val_metrics])
+
+    
+
+    
+    with open(new_model_dir.joinpath('args.json'), 'w') as f_args:
+        json.dump(vars(args), f_args)
+
+    
+    # Plot Box mAPs and save
+    plt.figure(figsize=(10,7))
+    plt.title("Contrastive Loss per Epoch")
+    plt.plot(train_losses['map'], label="train")
+    plt.plot(val_losses['map'], label="val")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(new_model_dir, f'loss_{new_id}.png'))
+
+    # Plot Mask mAPs and save
+    plt.figure(figsize=(10,7))
+    plt.title(f"Validation {args.evalutation_metric.capitalize()}")
+    plt.plot(val_metrics)
+    plt.xlabel("Epochs")
+    plt.ylabel(args.evalutation_metric.capitalize())
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(new_model_dir, f'mask_mAP_{new_id}.png'))
 
 
-        # train_loss /= len(pair_loader.dataset)
-
-        # return train_loss
-        return
-
-
-
-
-
-
+    [logging.root.removeHandler(handler) for handler in logging.root.handlers[:]]
 
