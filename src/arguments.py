@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument('--positive_percentage_train', type=float, default=0.5)
     parser.add_argument('--positive_percentage_test', type=float, default=0.5)
     
-    parser.add_argument('--model_type', type=str, default="clip")
+    # parser.add_argument('--model_type', type=str, default="clip")
     parser.add_argument('--pretrained_model_name', type=str, default="openai/clip-vit-base-patch32")
 
 
