@@ -274,7 +274,7 @@ if __name__ == '__main__':
     # logging.info(f"\nBest validation loss: {best_val_loss:.4f} on epoch {best_val_epoch}.")
     
 
-    test_loss, metrics, _ = test(**val_kwargs, thresholds=torch.tensor([optimal_threshold]))
+    test_loss, metrics, _ = test(**test_kwargs, thresholds=torch.tensor([optimal_threshold]))
     logging.info(
             "\n" + f"Test Loss: {val_loss:.4f}" + "\n" + 
             f"Test Metrics (threshold={optimal_threshold:.2f}): " +
