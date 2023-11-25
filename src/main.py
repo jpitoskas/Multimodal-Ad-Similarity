@@ -156,7 +156,6 @@ if __name__ == '__main__':
     
     model = MultiModalSiameseNetwork(multimodal_network).to(device)
 
-    exit()
     # Loss
     loss_fn = ContrastiveLoss(margin=args.margin)
 
