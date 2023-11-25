@@ -291,8 +291,8 @@ if __name__ == '__main__':
     # Plot Box mAPs and save
     plt.figure(figsize=(10,7))
     plt.title("Contrastive Loss per Epoch")
-    plt.plot(train_losses['map'], label="train")
-    plt.plot(val_losses['map'], label="val")
+    plt.plot(train_losses, label="train")
+    plt.plot(val_losses, label="val")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
@@ -307,7 +307,7 @@ if __name__ == '__main__':
     plt.ylabel(args.evalutation_metric.capitalize())
     plt.legend()
     plt.grid()
-    plt.savefig(os.path.join(new_model_dir, f'mask_mAP_{new_id}.png'))
+    plt.savefig(os.path.join(new_model_dir, f'{args.evalutation_metric}_{new_id}.png'))
 
 
     [logging.root.removeHandler(handler) for handler in logging.root.handlers[:]]
