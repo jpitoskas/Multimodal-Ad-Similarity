@@ -214,25 +214,28 @@ if __name__ == '__main__':
                     'device': device,
                     }
 
-    val_kwargs = {'pair_loader': pair_train_loader,
+    val_kwargs = {'pair_loader': pair_val_loader,
                   'model': model,
                   'processor': processor,
                   'loss_fn': loss_fn,
                   'device': device,
+                  'thresholds': torch.arange(-1, 1, 0.01),
+                  'similarity': 'cosine',
+                  'optimization_metric': args.evaluation_metric,
                   }
 
-    test_kwargs = {'pair_loader': pair_train_loader,
+    test_kwargs = {'pair_loader': pair_test_loader,
                    'model': model,
                    'processor': processor,
                    'loss_fn': loss_fn,
                    'device': device,
                    'similarity': 'cosine',
-                   'similarity_sampling_step': 0.01,
                    'optimization_metric': args.evaluation_metric,
                    }
     
 
-    best_metric_score, best_epoch = 0, 0 
+    best_metric_score, best_epoch = 0, 0
+    best_threshold = None
 
     # TRAINING LOOP
     logging.info(f"Fine-tune model on target task for {args.n_epochs} epochs:")
@@ -255,7 +258,8 @@ if __name__ == '__main__':
         if metrics[args.evaluation_metric] > best_metric_score:
                    
             best_metric_score = metrics[args.evaluation_metric]
-            epoch_best_bbox_map = epoch
+            best_threshold = optimal_threshold
+            best_epoch = epoch
             torch.save({
                         'epoch': epoch,
                         'model_state_dict': model.state_dict(),
@@ -266,9 +270,19 @@ if __name__ == '__main__':
                         }, os.path.join(new_model_dir, f"checkpoint_{new_id}.pt"))
             
     
-    logging.info(f"\nBest {args.evaluation_metric.capitalize()}: {best_metric_score:.4f} on epoch {epoch_best_bbox_map}.")
+    logging.info(f"\nBest {args.evaluation_metric.capitalize()}: {best_metric_score:.4f} on epoch {best_epoch}.")
     # logging.info(f"\nBest validation loss: {best_val_loss:.4f} on epoch {best_val_epoch}.")
-            
+    
+
+    test_loss, metrics, _ = test(**val_kwargs, thresholds=torch.tensor(optimal_threshold[]))
+    logging.info(
+            "\n" + f"Test Loss: {val_loss:.4f}" + "\n" + 
+            f"Test Metrics (threshold={optimal_threshold:.2f}): " +
+            " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()]) +
+            "\n"
+        )
+
+
     with open(os.path.join(new_model_dir, "train_losses.csv"), "w") as f:
         wr = csv.writer(f)
         wr.writerows([train_losses])
@@ -288,7 +302,7 @@ if __name__ == '__main__':
         json.dump(vars(args), f_args)
 
     
-    # Plot Box mAPs and save
+    # Plot Contrastive Loss
     plt.figure(figsize=(10,7))
     plt.title("Contrastive Loss per Epoch")
     plt.plot(train_losses, label="train")
@@ -299,7 +313,7 @@ if __name__ == '__main__':
     plt.grid()
     plt.savefig(os.path.join(new_model_dir, f'loss_{new_id}.png'))
 
-    # Plot Mask mAPs and save
+    # Plot Validation Eval metric
     plt.figure(figsize=(10,7))
     plt.title(f"Validation {args.evalutation_metric.capitalize()}")
     plt.plot(val_metrics)

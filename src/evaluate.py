@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 
 
 # Val/Test function
-def test(pair_loader, model, processor, loss_fn, device, similarity='cosine', similarity_sampling_step=0.01, optimization_metric='precision'):
+def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange(-1, 1, 0.01), similarity='cosine', similarity_sampling_step=0.01, optimization_metric='precision'):
 
     
     all_similarities = []
@@ -47,8 +47,7 @@ def test(pair_loader, model, processor, loss_fn, device, similarity='cosine', si
             running_loss += loss.item() * targets.size(0) # smaller batches count less
 
         
-        if similarity == 'cosine':    
-            thresholds = torch.arange(-1, 1, similarity_sampling_step)
+        if similarity == 'cosine':
             metrics, optimal_threshold = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities), y_true=torch.tensor(all_targets), thresholds=thresholds, optimization_metric=optimization_metric)
         else:
             NotImplementedError('Unsupported similarity measurement')
