@@ -43,7 +43,7 @@ def test(pair_loader, model, processor, loss_fn, device, similarity='cosine', si
 
 
 
-            loss = loss_fn(outputs1, outputs2)
+            loss = loss_fn(outputs1, outputs2, targets)
             running_loss += loss.item() * targets.size(0) # smaller batches count less
 
         
