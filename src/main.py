@@ -160,7 +160,7 @@ if __name__ == '__main__':
 
     # Optimizer
     param_groups = get_param_groups_for_finetuning(model, args.model_type)
-    optimizer = optim.AdamW(param_groups, lr=args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
+    optimizer = optim.AdamW(param_groups, lr=args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay, eps=args.adam_epsilon)
 
      # Trainable parameters
     trainable_params = sum(p.numel() for p in optimizer.param_groups[0]['params'] if p.requires_grad)

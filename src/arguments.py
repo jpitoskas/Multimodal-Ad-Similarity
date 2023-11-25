@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('--weight_decay', type=float, default=0.01, help='weight decay coefficient ')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 coefficient')
     parser.add_argument('--beta2', type=float, default=0.999, help='beta2 coefficient')
+    parser.add_argument('--adam_epsilon', type=float, default=1e-8, help='Adam epsilon')
     # parser.add_argument('--scheduler', default='multistep', choices=['multistep', 'cosine', 'linear', 'exponential'], help='scheduler (multistep, cosine, linear, exponential)')
     # parser.add_argument('--milestones', nargs='+', type=float, default=[0.5, 0.8, 0.9], help="list of scheduler's milestones (floats between 0 and 1), only when scheduler='multistep'")
     # parser.add_argument('--llrd_factor', type=float, default=0.9, help="layer-wise learning rate decay factor (default: 0.9)")
