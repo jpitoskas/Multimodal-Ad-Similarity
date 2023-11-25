@@ -192,11 +192,13 @@ if __name__ == '__main__':
         train_losses = checkpoint['train_losses']
         val_losses = checkpoint['val_losses']
         val_losses = checkpoint['val_metrics']
+        val_aucs = checkpoint['val_aucs']
     else:
         init_epoch = 1
         train_losses = []
         val_losses = []
         val_metrics = []
+        val_aucs = []
 
 
      # Parallelize if more than 1 GPU
@@ -234,7 +236,8 @@ if __name__ == '__main__':
                    }
     
 
-    best_metric_score, best_epoch = 0, 0
+    # best_metric_score, best_epoch = 0, 0
+    best_auc, best_epoch = 0, 0
     best_threshold = None
 
     # TRAINING LOOP
@@ -246,6 +249,7 @@ if __name__ == '__main__':
         train_losses.append(train_loss)
         val_losses.append(val_loss)
         val_metrics.append(metrics[args.evaluation_metric])
+        val_aucs.append(auc)
 
         logging.info(
             "\n" + 
@@ -255,9 +259,9 @@ if __name__ == '__main__':
             "\n"
         )
         
-        if metrics[args.evaluation_metric] > best_metric_score:
+        if auc > best_auc:
                    
-            best_metric_score = metrics[args.evaluation_metric]
+            best_auc = auc
             best_threshold = optimal_threshold
             best_epoch = epoch
             torch.save({
@@ -267,18 +271,19 @@ if __name__ == '__main__':
                         'train_losses': train_losses,
                         'val_losses': val_losses,
                         'val_metrics': val_metrics,
+                        'val_aucs': val_aucs,
                         }, os.path.join(new_model_dir, f"checkpoint_{new_id}.pt"))
             
     
-    logging.info(f"\nBest {args.evaluation_metric.capitalize()}: {best_metric_score:.4f} on epoch {best_epoch}.")
+    logging.info(f"\nBest AUC: {best_auc:.4f} on epoch {best_epoch}.")
     # logging.info(f"\nBest validation loss: {best_val_loss:.4f} on epoch {best_val_epoch}.")
     
 
-    test_loss, metrics, _ = test(**test_kwargs, thresholds=torch.tensor([best_threshold]))
+    test_loss, metrics, _, auc = test(**test_kwargs, thresholds=torch.tensor([best_threshold]))
     logging.info(
             "\n" + f"Test Loss: {val_loss:.4f}" + "\n" + 
             f"Test Metrics (threshold={optimal_threshold:.2f}): " +
-            " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()]) +
+            " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()]) + f" | AUC: {auc:.4f}"
             "\n"
         )
 
@@ -294,6 +299,10 @@ if __name__ == '__main__':
     with open(os.path.join(new_model_dir, "val_metrics.csv"), "w") as f:
         wr = csv.writer(f)
         wr.writerows([val_metrics])
+    
+    with open(os.path.join(new_model_dir, "val_aucs.csv"), "w") as f:
+        wr = csv.writer(f)
+        wr.writerows([val_aucs])
 
     
 
@@ -321,6 +330,16 @@ if __name__ == '__main__':
     plt.ylabel(args.evaluation_metric.capitalize())
     plt.grid()
     plt.savefig(os.path.join(new_model_dir, f'{args.evaluation_metric}_{new_id}.png'))
+
+
+    # Plot Validation Eval metric
+    plt.figure(figsize=(10,7))
+    plt.title(f"Validation AUC")
+    plt.plot(val_aucs)
+    plt.xlabel("Epochs")
+    plt.ylabel('AUC')
+    plt.grid()
+    plt.savefig(os.path.join(new_model_dir, f'AUC_{new_id}.png'))
 
 
     [logging.root.removeHandler(handler) for handler in logging.root.handlers[:]]
