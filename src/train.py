@@ -28,9 +28,9 @@ def train(epoch, pair_loader, model, processor, loss_fn, optimizer, device):
 
         outputs1, outputs2 = model(inputs1, inputs2)
 
-        loss = loss_fn(outputs1, outputs2)
+        loss = loss_fn(outputs1, outputs2, targets)
 
-        train_loss += loss.item() * targets.size(0) # smaller batches count less
+        running_loss += loss.item() * targets.size(0) # smaller batches count less
 
         loss.backward()
         optimizer.step()
