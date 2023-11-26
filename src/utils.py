@@ -137,7 +137,8 @@ def get_param_groups(model, model_type):
                         {'params': model.multimodal_network.clip_model.text_model.parameters(), 'name': 'clip_text_model'},
                         {'params': model.multimodal_network.clip_model.vision_model.parameters(), 'name': 'clip_visual_model'},
                         {'params': model.multimodal_network.clip_model.text_projection.parameters(), 'name': 'clip_text_projection'},
-                        {'params': model.multimodal_network.clip_model.visual_projection.parameters(), 'name': 'clip_visual_projection'}
+                        {'params': model.multimodal_network.clip_model.visual_projection.parameters(), 'name': 'clip_visual_projection'},
+                        {'params': model.residual_layer.parameters(), 'name': 'final_fc'}
                         ]
         case _:
             raise NotImplementedError(f"Model type '{model_type}' is not yet supported")
@@ -164,7 +165,8 @@ def get_param_groups_for_finetuning(model, model_type):
 
     match model_type:
         case "clip":
-            param_groups = get_param_groups(model, model_type)[-2:]
+            # param_groups = get_param_groups(model, model_type)[-2:]
+            param_groups = [get_param_groups(model, model_type)[-1]]
         case _:
             raise NotImplementedError(f"Model type '{model_type}' is not yet supported")
     

@@ -25,12 +25,16 @@ class MultiModalSiameseNetwork(nn.Module):
     def __init__(self, multimodal_network):
         super(MultiModalSiameseNetwork, self).__init__()
         self.multimodal_network = multimodal_network
+        self.residual_layer = nn.Linear(1024, 512)
+        self.gelu = nn.GELU()
 
 
     def forward_once(self, inputs, normalize_outputs=True):
         
         outputs = self.multimodal_network(inputs)
         fused_outputs = torch.cat((outputs['text'], outputs['image']), dim=1)
+
+        fused_outputs = fused_outputs + self.residual_layer(fused_outputs)
 
         if normalize_outputs:
             fused_outputs = F.normalize(fused_outputs, dim=1)
