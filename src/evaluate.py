@@ -60,6 +60,7 @@ def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange
             metrics, _ = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities),
                                                              y_true=torch.tensor(all_targets),
                                                              thresholds=torch.tensor([test_threshold]),
+                                                             return_auc=False,
                                                              fbeta=fbeta)
 
         running_loss /= len(pair_loader.dataset)
