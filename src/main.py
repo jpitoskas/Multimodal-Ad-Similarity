@@ -14,7 +14,7 @@ import random
 import numpy as np
 
 
-from transformers import AutoProcessor, CLIPModel
+from transformers import AutoProcessor, CLIPModel, CLIPImageProcessor, CLIPTokenizerFast, CLIPProcessor
 
 from torchvision import transforms
 import torch.optim as optim
@@ -146,9 +146,21 @@ if __name__ == '__main__':
     # Model
     match args.model_type:
         case "clip":
-            processor = AutoProcessor.from_pretrained(args.pretrained_model_name)
-            processor.image_processor.do_rescale = 'False'
-            processor.image_processor.rescale_factor = 1.0
+
+            # CLIPImageProcessor
+            image_processor = CLIPImageProcessor.from_pretrained(args.pretrained_model_name)
+            # Modify 'do rescale'
+            image_processor_dict = image_processor.to_dict()
+            image_processor_dict.do_rescale = False
+            image_processor = CLIPImageProcessor(**image_processor_dict.to_dict())
+
+            # CLIPTokenizerFast
+            tokenizer = CLIPTokenizerFast.from_pretrained(args.pretrained_model_name)
+
+            # CLIPProcessor
+            processor = CLIPProcessor(image_processor=image_processor, tokenizer=tokenizer)
+
+            # CLIPModel
             clip_model = CLIPModel.from_pretrained(args.pretrained_model_name).to(device)
             multimodal_network = CLIPModelModified(clip_model).to(device)
         case _:

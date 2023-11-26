@@ -95,7 +95,7 @@ def get_classification_metrics_by_threholds(y_true, y_pred, beta=0.5):
     tn = torch.logical_and(~y_pred.bool(), ~y_true.view(1, -1).bool()).sum(dim=1)
     fn = torch.logical_and(~y_pred.bool(), y_true.view(1, -1).bool()).sum(dim=1)
 
-    print(tp, fp, tn, fn)
+    # print(tp, fp, tn, fn)
 
 
     accuracy = (tp + tn) / (tn + fp + fn + tp)
