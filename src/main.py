@@ -234,7 +234,7 @@ if __name__ == '__main__':
                   'processor': processor,
                   'loss_fn': loss_fn,
                   'device': device,
-                  'thresholds': torch.arange(-1, 1, 0.01),
+                  'thresholds': torch.arange(-1, 1, 0.001),
                   'similarity': 'cosine',
                   'optimization_metric': args.evaluation_metric,
                   }
@@ -244,6 +244,7 @@ if __name__ == '__main__':
                    'processor': processor,
                    'loss_fn': loss_fn,
                    'device': device,
+                   'thresholds': torch.arange(-1, 1, 0.001),
                    'similarity': 'cosine',
                    'optimization_metric': args.evaluation_metric,
                    }
@@ -257,6 +258,7 @@ if __name__ == '__main__':
     logging.info(f"Fine-tune model on target task for {args.n_epochs} epochs:")
     for epoch in range(init_epoch, args.n_epochs + init_epoch):
         train_loss = train(epoch, **train_kwargs)
+        # train_loss = 0.9999
         val_loss, metrics, optimal_threshold, auc = test(**val_kwargs)
 
         train_losses.append(train_loss)
@@ -292,7 +294,8 @@ if __name__ == '__main__':
     # logging.info(f"\nBest validation loss: {best_val_loss:.4f} on epoch {best_val_epoch}.")
     
 
-    test_loss, metrics, _, auc = test(**test_kwargs, thresholds=torch.tensor([best_threshold]))
+    # test_loss, metrics, _, auc = test(**test_kwargs, thresholds=torch.tensor([best_threshold]))
+    test_loss, metrics, _, auc = test(**test_kwargs)
     logging.info(
             "\n" + f"Test Loss: {val_loss:.4f}" + "\n" + 
             f"Test Metrics (threshold={optimal_threshold:.2f}): " +

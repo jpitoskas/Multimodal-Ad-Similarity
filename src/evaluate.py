@@ -116,7 +116,7 @@ def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimi
     y_pred = predict_by_thresholds(similarities, thresholds)
     classification_metrics = get_classification_metrics_by_threholds(y_true, y_pred)
 
-
+    print(optimization_metric)
     if return_auc:
         pr_auc = auc(classification_metrics['recall'], classification_metrics['precision'])
 
