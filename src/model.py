@@ -25,7 +25,7 @@ class MultiModalSiameseNetwork(nn.Module):
     def __init__(self, multimodal_network):
         super(MultiModalSiameseNetwork, self).__init__()
         self.multimodal_network = multimodal_network
-        self.residual_layer = nn.Linear(1024, 512)
+        self.residual_layer = nn.Linear(1024, 1024)
         self.gelu = nn.GELU()
 
 
