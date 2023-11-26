@@ -149,12 +149,13 @@ if __name__ == '__main__':
 
 
     # Data Loading
-    logging.info("Inference will run on the Test split:\n")
-    logging.info("Loading Dataset...")
     if args.inference:
+        logging.info("Inference will run on the Test split:\n")
+        logging.info("Loading Dataset...")
         _, _, pair_test_loader = get_pair_dataloaders_combined(args, text_data_filepath, thumbnail_data_dir)
         logging.info(f'Test: {len(pair_test_loader.dataset)} - Positive / Negative Ratio: ({int(args.positive_percentage_test*100)}/{100-int(args.positive_percentage_test*100)})\n')    
     else:
+        logging.info("Loading Dataset...")
         pair_train_loader, pair_val_loader, pair_test_loader = get_pair_dataloaders_combined(args, text_data_filepath, thumbnail_data_dir)
         logging.info(f'Train: {len(pair_train_loader.dataset)} - Val: {len(pair_val_loader.dataset)} - Test: {len(pair_test_loader.dataset)}\n')
         logging.info(f'Positive/Negative Ratio:\n')    
@@ -222,6 +223,7 @@ if __name__ == '__main__':
         checkpoint = torch.load(load_path)
         # Loading model, optimizer, epoch, train_losses, val_losses
         model.load_state_dict(checkpoint['model_state_dict'])
+        # model.load_state_dict(checkpoint['model_state_dict'], strict=False)
         model = model.to(device)
         
         if not args.inference:
