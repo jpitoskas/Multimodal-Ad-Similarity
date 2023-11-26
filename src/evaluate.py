@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix, auc
 
 
 # Val/Test function
-def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange(-1, 1, 0.01), similarity='cosine', similarity_sampling_step=0.01, optimization_metric='precision', fbeta=0.5):
+def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange(-1, 1, 0.01), optimization_metric='precision', fbeta=0.5, test_threshold=None):
 
     
     all_similarities = []
@@ -48,16 +48,19 @@ def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange
             running_loss += loss.item() * targets.size(0) # smaller batches count less
 
         
-        if similarity == 'cosine':
-            metrics, optimal_threshold, auc = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities),
-                                                                                  y_true=torch.tensor(all_targets),
-                                                                                  thresholds=thresholds,
-                                                                                  optimization_metric=optimization_metric,
-                                                                                  return_auc=True,
-                                                                                  fbeta=fbeta)
-        else:
-            NotImplementedError('Unsupported similarity measurement')
-            
+        
+        metrics, optimal_threshold, auc = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities),
+                                                                              y_true=torch.tensor(all_targets),
+                                                                              thresholds=thresholds,
+                                                                              optimization_metric=optimization_metric,
+                                                                              return_auc=True,
+                                                                              fbeta=fbeta)
+        
+        if test_threshold is not None:
+            metrics, _ = optimal_metric_score_with_threshold(similarities=torch.tensor(all_similarities),
+                                                             y_true=torch.tensor(all_targets),
+                                                             thresholds=torch.tensor([test_threshold]),
+                                                             fbeta=fbeta)
 
         running_loss /= len(pair_loader.dataset)
         

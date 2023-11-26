@@ -44,6 +44,7 @@ def parse_args():
 
     parser.add_argument('--evaluation_metric', type=str, default='precision')
 
+    parser.add_argument('--inference_similarity_threshold', type='float', default=0.86, help='Similarity decision threshold. Used only with inferece=True')
 
     parser.add_argument('--n_pairs_train', type=int, default=10000)
     parser.add_argument('--n_pairs_val', type=int, default=2500)
