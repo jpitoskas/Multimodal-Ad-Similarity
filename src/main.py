@@ -237,6 +237,7 @@ if __name__ == '__main__':
                   'thresholds': torch.arange(-1, 1, 0.001),
                   'similarity': 'cosine',
                   'optimization_metric': args.evaluation_metric,
+                  'fbeta': args.fbeta
                   }
 
     test_kwargs = {'pair_loader': pair_test_loader,
@@ -247,6 +248,7 @@ if __name__ == '__main__':
                    'thresholds': torch.arange(-1, 1, 0.001),
                    'similarity': 'cosine',
                    'optimization_metric': args.evaluation_metric,
+                   'fbeta': args.fbeta
                    }
     
 

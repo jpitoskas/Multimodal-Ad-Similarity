@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix, auc
 
 
 # Val/Test function
-def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange(-1, 1, 0.01), similarity='cosine', similarity_sampling_step=0.01, optimization_metric='precision'):
+def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange(-1, 1, 0.01), similarity='cosine', similarity_sampling_step=0.01, optimization_metric='precision', fbeta=0.5):
 
     
     all_similarities = []
@@ -53,7 +53,8 @@ def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange
                                                                                   y_true=torch.tensor(all_targets),
                                                                                   thresholds=thresholds,
                                                                                   optimization_metric=optimization_metric,
-                                                                                  return_auc=True)
+                                                                                  return_auc=True,
+                                                                                  fbeta=fbeta)
         else:
             NotImplementedError('Unsupported similarity measurement')
             
@@ -106,17 +107,16 @@ def get_classification_metrics_by_threholds(y_true, y_pred, beta=0.5):
 
 
 
-    classification_metrics = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1_score': f1_score, 'f_beta': f_beta}
+    classification_metrics = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1_score': f1_score, f'f_beta(beta={beta})': f_beta}
 
     return classification_metrics
 
 
-def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimization_metric='precision', return_auc=True):
+def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimization_metric='precision', return_auc=True, fbeta=0.5):
 
     y_pred = predict_by_thresholds(similarities, thresholds)
-    classification_metrics = get_classification_metrics_by_threholds(y_true, y_pred)
+    classification_metrics = get_classification_metrics_by_threholds(y_true, y_pred, fbeta=fbeta)
 
-    print(optimization_metric)
     if return_auc:
         pr_auc = auc(classification_metrics['recall'], classification_metrics['precision'])
 

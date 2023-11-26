@@ -38,6 +38,8 @@ def parse_args():
     # parser.add_argument('--mask_threshold', type=float, default=0.4)
     # parser.add_argument('--score_threshold', type=float, default=0.05)
     # parser.add_argument('--excluded_categories', nargs='+', type=str, default=[], help='pixel mean per channel for data normalization')
+
+    parser.add_argument('--fbeta', type=float, default=0.5, help='beta for F-beta score (default: 0.5)')
     parser.add_argument('--num_workers', type=int, default=1)
 
     parser.add_argument('--evaluation_metric', type=str, default='precision')
