@@ -257,8 +257,8 @@ if __name__ == '__main__':
     # TRAINING LOOP
     logging.info(f"Fine-tune model on target task for {args.n_epochs} epochs:")
     for epoch in range(init_epoch, args.n_epochs + init_epoch):
-        train_loss = train(epoch, **train_kwargs)
-        # train_loss = 0.9999
+        # train_loss = train(epoch, **train_kwargs)
+        train_loss = 0.9999
         val_loss, metrics, optimal_threshold, auc = test(**val_kwargs)
 
         train_losses.append(train_loss)
