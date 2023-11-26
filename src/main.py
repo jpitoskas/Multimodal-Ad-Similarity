@@ -67,6 +67,11 @@ if __name__ == '__main__':
         args.model_type = 'clip'
     else:
         raise NotImplementedError(f'Unsupported model_type for {args.pretrained_model_name}')
+    
+    if args.evaluation_metric=='f_beta':
+        args.evaluation_metric = f'f_beta(beta={args.fbeta})'
+
+
 
 
 

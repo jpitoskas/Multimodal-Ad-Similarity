@@ -89,7 +89,7 @@ def predict_by_thresholds(similarities, thresholds):
     return preds
 
 
-def get_classification_metrics_by_threholds(y_true, y_pred, beta=0.5):
+def get_classification_metrics_by_threholds(y_true, y_pred, fbeta=0.5):
 
     tp = torch.logical_and(y_pred.bool(), y_true.view(1, -1).bool()).sum(dim=1)
     fp = torch.logical_and(y_pred.bool(), ~y_true.view(1, -1).bool()).sum(dim=1)
@@ -103,11 +103,11 @@ def get_classification_metrics_by_threholds(y_true, y_pred, beta=0.5):
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1_score = tp / (tp + 0.5 * (fp + fn))
-    f_beta = (1 + beta**2) * (precision * recall / ((beta**2)*precision + recall))
+    f_beta = (1 + fbeta**2) * (precision * recall / ((fbeta**2)*precision + recall))
 
 
 
-    classification_metrics = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1_score': f1_score, f'f_beta(beta={beta})': f_beta}
+    classification_metrics = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1_score': f1_score, f'f_beta(beta={fbeta})': f_beta}
 
     return classification_metrics
 
