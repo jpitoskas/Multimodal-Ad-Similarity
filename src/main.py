@@ -152,7 +152,7 @@ if __name__ == '__main__':
             # Modify 'do rescale'
             image_processor_dict = image_processor.to_dict()
             image_processor_dict['do_rescale'] = False
-            image_processor = CLIPImageProcessor(**image_processor_dict.to_dict())
+            image_processor = CLIPImageProcessor(**image_processor_dict)
 
             # CLIPTokenizerFast
             tokenizer = CLIPTokenizerFast.from_pretrained(args.pretrained_model_name)
