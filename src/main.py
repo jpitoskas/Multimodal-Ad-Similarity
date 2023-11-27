@@ -162,8 +162,8 @@ if __name__ == '__main__':
         logging.info(f'Positive/Negative Ratio:\n')    
         logging.info(
                 f'Train: {int(args.positive_percentage_train*100)}/{100-int(args.positive_percentage_train*100)}' +
-                f'- Val: {int(args.positive_percentage_val*100)}/{100-int(args.positive_percentage_val*100)}' + 
-                f'- Test: {int(args.positive_percentage_test*100)}/{100-int(args.positive_percentage_test*100)}'
+                f' - Val: {int(args.positive_percentage_val*100)}/{100-int(args.positive_percentage_val*100)}' + 
+                f' - Test: {int(args.positive_percentage_test*100)}/{100-int(args.positive_percentage_test*100)}'
             )
     
         
