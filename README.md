@@ -16,19 +16,19 @@ A repo with code for Ad Deduplication using pretrained CLIP given an ad title an
 We encourage to create a virtual environment and install the project's dependencies.
 
 ### Install Dependencies:
-```
+```bash
 pip install -r requirements.txt
 ```
 
 ### Train with Default Arguments
-```
+```bash
 python src/main.py
 ```
 
 
 
 ### Inference with Default Arguments
-```
+```bash
 python src/main.py --inference --load_model_id [model_id]
 ```
 
@@ -111,7 +111,7 @@ After downloading the model checkpoint, you can:
 
 - use it for further training/fine-tuning:
 
-    ```
+    ```bash
     python src/main.py --inference --load_model_id [model_id]
     ```
 
