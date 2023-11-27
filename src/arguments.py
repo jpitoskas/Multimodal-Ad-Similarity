@@ -1,6 +1,6 @@
 import argparse
 
-def parse_args():
+def get_args_parser():
 
     parser = argparse.ArgumentParser(description='DeepLab-AdSimilarity')
 
@@ -59,6 +59,5 @@ def parse_args():
 
     parser.add_argument('--margin', type=float, default=1.0, help='Contrastive Loss margin hyperparameter ')
 
-    args = parser.parse_args()
 
-    return args
+    return parser
