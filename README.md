@@ -87,19 +87,45 @@ You can download our pre-trained model checkpoint from the following link:
 
 [Download Model Checkpoint (.pt file)](https://drive.google.com/file/d/1-9A89LmE-OfI-0KWPnVgkQbdXL7P0epX/view?usp=sharing)
 
-### Usage Instructions
 
+### Checkpoint Naming Convention
+
+The checkpoint will have a filename in the format `checkpoint_ID.py`, where `ID` corresponds to the `load_model_id` argument of the main script.
+
+### Directory Structure
+
+Place the downloaded checkpoint file in the following directory structure within your project:
+```
+experiments/
+    ├── Model_ID/
+    │   └── checkpoint_ID.pt
+```
+
+Replace id in both `Model_ID` and checkpoint_ID.pt with the respective model identifier `load_model_id`. Ensure the checkpoint file is located within the appropriate `/Model_ID` directory.
+
+
+
+### Usage Instructions
 
 After downloading the model checkpoint, you can:
 
 - use it for further training/fine-tuning:
 
-```
-python src/main.py --inference --load_model_id [model_id]
-```
+    ```
+    python src/main.py --inference --load_model_id [model_id]
+    ```
 
 - use it for inference:
 
+    ```bash
+    python src/main.py --inference
+    ```
+
+## Single Ad Pair Prediction
+
+This is a python script to play around with for determining whether two ads are similar or not:
 ```
-python src/main.py --inference
+python src/predict_ad_pair.py --text_filepath1 [text_filepath1] --text_filepath2 [text_filepath2] --image_filepath1 [image_filepath1] --image_filepath2 [image_filepath2]
 ```
+
+
