@@ -124,7 +124,7 @@ After downloading the model checkpoint, you can:
 ## Single Ad Pair Prediction
 
 This is a python script to play around with for determining whether two ads are similar or not:
-```
+```bash
 python src/predict_ad_pair.py --text_filepath1 [text_filepath1] --text_filepath2 [text_filepath2] --image_filepath1 [image_filepath1] --image_filepath2 [image_filepath2]
 ```
 
