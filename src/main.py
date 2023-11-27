@@ -8,6 +8,7 @@ from evaluate import *
 
 from pathlib import Path
 import sys
+
 import torch
 import logging
 import random
@@ -34,7 +35,6 @@ current_dir = Path().absolute()
 # if str(current_dir.parent/'src') not in sys.path:
 #     sys.path.append(str(current_dir.parent/'src'))
     
-from dataloaders import *
 
 
 
@@ -45,7 +45,8 @@ warnings.filterwarnings("ignore")
 if __name__ == '__main__':
 
     # Parse arguments
-    args = parse_args()
+    parser = get_args_parser()
+    args = parser.parse_args()
 
     # Set seeds for reproducibility
     random.seed(args.seed)
@@ -143,7 +144,7 @@ if __name__ == '__main__':
     # Logging Arguments
     logging.info("\nArguments:")
     logging.info('\n'.join(f'- {k}: {v}' for k, v in vars(args).items()))
-    # logging.info('\n'.join(f'args.{k}={v}' for k, v in vars(args).items()))
+    logging.info('\n'.join(f'args.{k}={v}' for k, v in vars(args).items()))
     logging.info('\n')
     # exit()
 
@@ -297,8 +298,10 @@ if __name__ == '__main__':
             logging.info(
                 "\n" + 
                 f"Epoch [{epoch}/{args.n_epochs}]: Train Loss: {train_loss:.4f}" + ' | ' + f"Validation Loss: {val_loss:.4f}" + "\n" +
-                " "*len(f"Epoch [{epoch}/{args.n_epochs}]: ") + f"Validation Metrics (threshold={optimal_threshold:.2f}): \n" + "           " +
-                " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()]) + f" | AUC: {auc:.4f}"
+                " "*len(f"Epoch [{epoch}/{args.n_epochs}]: ") + f"Validation Metrics (threshold={optimal_threshold:.2f}): \n" + 
+                " "*len(f"Epoch [{epoch}/{args.n_epochs}]: ") +
+                " | ".join([f'{metric_str.capitalize()}: {metric_score:.4f}' for metric_str, metric_score in metrics.items()]) + 
+                " "*len(f"Epoch [{epoch}/{args.n_epochs}]: ") + f"AUC: {auc:.4f}"
                 "\n"
             )
             

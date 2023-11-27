@@ -2,6 +2,10 @@ import torch
 from torch.utils.data import Subset
 from sklearn.model_selection import train_test_split
 
+import random
+import numpy as np
+import torch
+
 from model import *
 
 
@@ -175,3 +179,17 @@ def get_param_groups_for_finetuning(model, model_type):
 
 
 
+def reset_seeds(seed):
+    
+    torch.manual_seed(seed)
+
+    random.seed(seed)
+    np.random.seed(seed)
+
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        
+
+
+    
