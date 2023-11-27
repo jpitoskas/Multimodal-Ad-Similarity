@@ -143,6 +143,7 @@ def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimi
 
 
 
+
 # def binary_search_threshold(similarities, y_true, lo=-1, hi=1, optimization_metric='precision'):
     
     
@@ -170,6 +171,45 @@ def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimi
 #             hi = mid - 0.0001  # Adjust this value for precision
             
 #     return best_threshold, best_metric_score
+
+
+
+
+
+def compute_similarities(pair_loader, model, processor, device):
+    
+    all_similarities = []
+    all_targets = []
+
+    model.eval()
+    with torch.no_grad():
+        for _, (data, targets) in enumerate(tqdm(pair_loader)):
+
+            (text1, image1), (text2, image2) = data
+
+            image1 = image1.to(device)
+            image2 = image2.to(device)
+
+            targets = targets.to(device)
+
+            inputs1 = processor(text=text1, images=image1, return_tensors="pt", padding=True, truncation=True)
+            inputs2 = processor(text=text2, images=image1, return_tensors="pt", padding=True, truncation=True)
+
+            # Move tensors to the device
+            inputs1 = {key: value.to(device) for key, value in inputs1.items()}
+            inputs2 = {key: value.to(device) for key, value in inputs2.items()}
+
+
+            outputs1, outputs2 = model(inputs1, inputs2)
+
+
+            cosine_similarities = F.cosine_similarity(outputs1, outputs2)
+
+            all_similarities.extend(cosine_similarities.tolist())
+            all_targets.extend(targets.tolist())
+    
+    return all_similarities, all_targets
+
 
 
 

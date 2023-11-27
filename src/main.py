@@ -144,7 +144,7 @@ if __name__ == '__main__':
     # Logging Arguments
     logging.info("\nArguments:")
     logging.info('\n'.join(f'- {k}: {v}' for k, v in vars(args).items()))
-    logging.info('\n'.join(f'args.{k}={v}' for k, v in vars(args).items()))
+    # logging.info('\n'.join(f'args.{k}={v}' for k, v in vars(args).items()))
     logging.info('\n')
     # exit()
 
@@ -232,7 +232,7 @@ if __name__ == '__main__':
             init_epoch = checkpoint['epoch']
             train_losses = checkpoint['train_losses']
             val_losses = checkpoint['val_losses']
-            val_losses = checkpoint['val_metrics']
+            val_metrics = checkpoint['val_metrics']
             val_aucs = checkpoint['val_aucs']
     else:
         init_epoch = 1
