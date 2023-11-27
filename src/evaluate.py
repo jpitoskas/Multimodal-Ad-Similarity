@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix, auc
 
 
 # Val/Test function
-def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange(-1, 1, 0.01), optimization_metric='precision', fbeta=0.5, test_threshold=None):
+def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange(-1, 1, 0.001), optimization_metric='precision', fbeta=0.5, test_threshold=None):
 
     
     all_similarities = []
@@ -87,6 +87,20 @@ def test(pair_loader, model, processor, loss_fn, device, thresholds=torch.arange
 
 #     return classification_metrics
 
+def get_confusion_matrix_by_thresholds(similarities, y_true, thresholds):
+
+
+    y_pred = predict_by_thresholds(similarities, thresholds)
+
+    tp = torch.logical_and(y_pred.bool(), y_true.view(1, -1).bool()).sum(dim=1)
+    fp = torch.logical_and(y_pred.bool(), ~y_true.view(1, -1).bool()).sum(dim=1)
+    tn = torch.logical_and(~y_pred.bool(), ~y_true.view(1, -1).bool()).sum(dim=1)
+    fn = torch.logical_and(~y_pred.bool(), y_true.view(1, -1).bool()).sum(dim=1)
+
+
+
+    return tp, fp, tn, fn
+
 
 def predict_by_thresholds(similarities, thresholds):
     preds = (similarities > thresholds.unsqueeze(1)).int()
@@ -116,7 +130,7 @@ def get_classification_metrics_by_threholds(y_true, y_pred, fbeta=0.5):
     return classification_metrics
 
 
-def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimization_metric='precision', return_auc=True, fbeta=0.5):
+def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimization_metric='precision', return_auc=True, fbeta=0.5, return_metrics_per_threshold=False):
 
     y_pred = predict_by_thresholds(similarities, thresholds)
     classification_metrics = get_classification_metrics_by_threholds(y_true, y_pred, fbeta=fbeta)
@@ -126,10 +140,12 @@ def optimal_metric_score_with_threshold(similarities, y_true, thresholds, optimi
 
 
     max_idx = classification_metrics[optimization_metric].argmax()
-
-    optimal_metrics = {metric_key : metric_by_threshold[max_idx].item() for metric_key, metric_by_threshold in classification_metrics.items()}
-
     optimal_threshold = thresholds[max_idx].item()
+
+    if return_metrics_per_threshold:
+        optimal_metrics = classification_metrics
+    else:
+        optimal_metrics = {metric_key : metric_by_threshold[max_idx].item() for metric_key, metric_by_threshold in classification_metrics.items()}
 
 
     if return_auc:
