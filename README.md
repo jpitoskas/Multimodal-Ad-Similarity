@@ -6,7 +6,7 @@
 A repo with code for Ad Deduplication using pretrained CLIP given an ad title and thumbnail. 
 
 
-**Author**: Giannis Pitoskas \
+**Author**: Giannis Pitoskas <br>
 **E-mail**: [jpitoskas@gmail.com](mailto:jpitoskas@gmail.com)
 
 
