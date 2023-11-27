@@ -18,7 +18,7 @@ def predict_ad_pair(text_filepath1, text_filepath2, image_filepath1, image_filep
                     seed=1
                     ):
     
-    reset_seeds(args.seed)
+    reset_seeds(seed)
     
     text_filepath1 = Path(text_filepath1)
     text_filepath2 = Path(text_filepath2)
@@ -50,12 +50,12 @@ def predict_ad_pair(text_filepath1, text_filepath2, image_filepath1, image_filep
     working_dir = current_dir.parent
 
     model_dir_prefix = "Model_"
-    experiments_dir = working_dir/'experiments'/args.pretrained_model_name.replace('/','_')
+    experiments_dir = working_dir/'experiments'/pretrained_model_name.replace('/','_')
 
 
     # Image Processor: 
     # Preprocess the input image the way the pretrained model expects 
-    image_processor = CLIPImageProcessor.from_pretrained(args.pretrained_model_name)
+    image_processor = CLIPImageProcessor.from_pretrained(pretrained_model_name)
 
     # Modify 'do rescale' because our images are already scaled to [0,1]
     image_processor_dict = image_processor.to_dict()
@@ -65,7 +65,7 @@ def predict_ad_pair(text_filepath1, text_filepath2, image_filepath1, image_filep
 
     # CLIPTokenizerFast: 
     # Preprocess/Tokenize the input document the way the pretrained model expects 
-    tokenizer = CLIPTokenizerFast.from_pretrained(args.pretrained_model_name)
+    tokenizer = CLIPTokenizerFast.from_pretrained(pretrained_model_name)
 
 
     # CLIPProcessor: 
@@ -74,7 +74,7 @@ def predict_ad_pair(text_filepath1, text_filepath2, image_filepath1, image_filep
 
 
     # CLIPModel
-    clip_model = CLIPModel.from_pretrained(args.pretrained_model_name).to(device)
+    clip_model = CLIPModel.from_pretrained(pretrained_model_name).to(device)
     
     
     # Same as the CLIPModel but instead forward() only returns the image and text embeddings
@@ -86,8 +86,8 @@ def predict_ad_pair(text_filepath1, text_filepath2, image_filepath1, image_filep
     
     if load_model_id is not None:
         # Load weights from fine-tuning
-        load_dir = os.path.join(experiments_dir, model_dir_prefix + str(args.load_model_id))
-        load_path = os.path.join(load_dir, f"checkpoint_{args.load_model_id}.pt")
+        load_dir = os.path.join(experiments_dir, model_dir_prefix + str(load_model_id))
+        load_path = os.path.join(load_dir, f"checkpoint_{load_model_id}.pt")
         checkpoint = torch.load(load_path)
         model.load_state_dict(checkpoint['model_state_dict'])
         model = model.to(device)
