@@ -112,13 +112,13 @@ After downloading the model checkpoint, you can:
 - use it for further training/fine-tuning:
 
     ```bash
-    python src/main.py --inference --load_model_id [model_id]
+    python src/main.py --load_model_id [model_id]
     ```
 
 - use it for inference:
 
     ```bash
-    python src/main.py --inference
+    python src/main.py --inference --load_model_id [model_id]
     ```
 
 ## Single Ad Pair Prediction
