@@ -59,13 +59,13 @@ python src/main.py --inference --load_model_id [model_id]
 `--margin 1.0`<br>
 
 ### Example Custom Run for Training
-```
+```bash
 python src/main.py --n_epochs 10 --lr 5e-3 --seed 42
 ```
 
 
 ### Example Custom Run for Inference
-```
+```bash
 python src/main.py --inference --load_model_id [model_id] --batch_size 64 --inference_similarity_threshold f1_score
 ```
 
