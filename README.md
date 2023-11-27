@@ -90,18 +90,18 @@ You can download our pre-trained model checkpoint from the following link:
 
 ### Checkpoint Naming Convention
 
-The checkpoint will have a filename in the format `checkpoint_ID.py`, where `ID` corresponds to the `load_model_id` argument of the main script.
+The checkpoint will have a filename in the format `checkpoint_{ID}{.py`, where `ID` corresponds to the `load_model_id` argument of the main script.
 
 ### Directory Structure
 
 Place the downloaded checkpoint file in the following directory structure within your project:
 ```
 experiments/
-    ├── Model_ID/
-    │   └── checkpoint_ID.pt
+    ├── Model_{ID}/
+    │   └── checkpoint_{ID}.pt
 ```
 
-Replace id in both `Model_ID` and checkpoint_ID.pt with the respective model identifier `load_model_id`. Ensure the checkpoint file is located within the appropriate `/Model_ID` directory.
+Replace id in both `Model_{ID}` and checkpoint_{ID}.pt with the respective model identifier `load_model_id`. Ensure the checkpoint file is located within the appropriate `/Model_{ID}` directory.
 
 
 
