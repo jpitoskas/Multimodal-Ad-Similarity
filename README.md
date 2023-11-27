@@ -29,7 +29,7 @@ python src/main.py
 
 ### Inference with defaults
 ```
-python src/main.py --inference --load_model_id [model_id]
+python src/main.py --load_model_id [model_id] --inference
 ```
 
 ### Arguments
@@ -66,7 +66,7 @@ python src/main.py --n_epochs 10 --lr 5e-3 --seed 42
 
 ### Example custom run for inference
 ```
-python src/main.py --inference --load_model_id [model_id] --batch_size 64 --inference_similarity_threshold f1_score
+python src/main.py --load_model_id [model_id] --inference --batch_size 64 --inference_similarity_threshold f1_score
 ```
 
 
