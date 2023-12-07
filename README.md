@@ -1,4 +1,4 @@
-# DeepLab Ad Similarity
+# Ad Similarity
 
 
 [Official Pytorch implementation]
@@ -73,9 +73,9 @@ python src/main.py --inference --load_model_id [model_id] --batch_size 64 --infe
 
 ## Dataset:
 
-You can download the Ad Dataset [here](https://storage.googleapis.com/deeplab/projects/dedup/dataset.zip).
+<!-- You can download the Ad Dataset [here](https://storage.googleapis.com/deeplab/projects/dedup/dataset.zip). -->
 
-Unzip `dataset.zip` and follow this structure:
+<!-- Unzip `dataset.zip` and follow this structure: -->
 
 - for the text data: `data/dataset/data.txt`
 - for the image data: `data/dataset/images`
