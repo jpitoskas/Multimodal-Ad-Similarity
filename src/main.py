@@ -24,6 +24,7 @@ from tqdm import tqdm
 import warnings
 import os
 import datetime
+import csv
 
 import matplotlib.pyplot as plt
 import json
@@ -122,7 +123,7 @@ if __name__ == '__main__':
 
 
     if args.inference:
-        logging.info(f'Inference Mode\n')
+        logging.info('Inference Mode\n')
     else:
         logging.info(f'{model_dir_prefix}ID: {new_id}\n')
         logging.info(datetime.datetime.now())
@@ -159,7 +160,7 @@ if __name__ == '__main__':
         logging.info("Loading Dataset...")
         pair_train_loader, pair_val_loader, pair_test_loader = get_pair_dataloaders_combined(args, text_data_filepath, thumbnail_data_dir)
         logging.info(f'Train: {len(pair_train_loader.dataset)} - Val: {len(pair_val_loader.dataset)} - Test: {len(pair_test_loader.dataset)}\n')
-        logging.info(f'Positive/Negative Ratio:\n')    
+        logging.info('Positive/Negative Ratio:\n')    
         logging.info(
                 f'Train: {int(args.positive_percentage_train*100)}/{100-int(args.positive_percentage_train*100)}' +
                 f' - Val: {int(args.positive_percentage_val*100)}/{100-int(args.positive_percentage_val*100)}' + 
@@ -393,7 +394,7 @@ if __name__ == '__main__':
 
         # Plot Validation Eval metric
         plt.figure(figsize=(10,7))
-        plt.title(f"Validation AUC")
+        plt.title("Validation AUC")
         plt.plot(val_aucs)
         plt.xlabel("Epochs")
         plt.ylabel('AUC')

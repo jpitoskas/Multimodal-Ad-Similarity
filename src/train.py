@@ -16,7 +16,7 @@ def train(epoch, pair_loader, model, processor, loss_fn, optimizer, device):
         targets = targets.to(device)
         
         inputs1 = processor(text=text1, images=image1, return_tensors="pt", padding=True, truncation=True)
-        inputs2 = processor(text=text2, images=image1, return_tensors="pt", padding=True, truncation=True)
+        inputs2 = processor(text=text2, images=image2, return_tensors="pt", padding=True, truncation=True)
 
         # Move tensors to the device
         inputs1 = {key: value.to(device) for key, value in inputs1.items()}

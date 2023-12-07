@@ -4,9 +4,9 @@ import os
 import glob
 from PIL import Image
 import random
-from torch.utils.data import Dataset, DataLoader
 
 from torchvision import transforms
+import torch
 
 
 from sklearn.model_selection import train_test_split
@@ -373,7 +373,7 @@ class CombinedAdDataset(Dataset):
     
 
 
-from torch.utils.data import Dataset
+
 
 
 class PairAdDataset(Dataset):
@@ -495,9 +495,9 @@ def get_dataloaders_combined(args,
     kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.cuda else {}
 
     # Create DataLoader for each split
-    train_loader_combined = DataLoader(train_dataset_combined, batch_size=args.batch_size, shuffle=True)
-    val_loader_combined = DataLoader(val_dataset_combined, batch_size=args.batch_size, shuffle=True)
-    test_loader_combined = DataLoader(test_dataset_combined, batch_size=args.batch_size, shuffle=False)
+    train_loader_combined = DataLoader(train_dataset_combined, batch_size=args.batch_size, shuffle=True, **kwargs)
+    val_loader_combined = DataLoader(val_dataset_combined, batch_size=args.batch_size, shuffle=True, **kwargs)
+    test_loader_combined = DataLoader(test_dataset_combined, batch_size=args.batch_size, shuffle=False, **kwargs)
 
 
     return train_loader_combined, val_loader_combined, test_loader_combined
@@ -537,9 +537,9 @@ def get_pair_dataloaders_combined(args,
     kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.cuda else {}
 
     # Create DataLoader for each split
-    pair_train_loader_sampled = DataLoader(pair_ad_dataset_train_sampled, batch_size=args.batch_size, shuffle=True)
-    pair_val_loader_sampled = DataLoader(pair_ad_dataset_val_sampled, batch_size=args.batch_size, shuffle=False)
-    pair_test_loader_sampled = DataLoader(pair_ad_dataset_test_sampled, batch_size=args.batch_size, shuffle=False)
+    pair_train_loader_sampled = DataLoader(pair_ad_dataset_train_sampled, batch_size=args.batch_size, shuffle=True, **kwargs)
+    pair_val_loader_sampled = DataLoader(pair_ad_dataset_val_sampled, batch_size=args.batch_size, shuffle=False, **kwargs)
+    pair_test_loader_sampled = DataLoader(pair_ad_dataset_test_sampled, batch_size=args.batch_size, shuffle=False, **kwargs)
 
     return pair_train_loader_sampled, pair_val_loader_sampled, pair_test_loader_sampled
 
