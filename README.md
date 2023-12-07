@@ -90,7 +90,7 @@ You can download our pre-trained model checkpoint from the following link:
 
 ### Checkpoint Naming Convention
 
-The checkpoint will have a filename in the format `checkpoint_{ID}{.py`, where `ID` corresponds to the `load_model_id` argument of the main script.
+The checkpoint will have a filename in the format `checkpoint_{ID}.py`, where `ID` corresponds to the `load_model_id` argument of the main script.
 
 ### Directory Structure
 
